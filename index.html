@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나를 갖는 시간 ✦ 리추얼 카드 메이커</title>
+<link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-neo.css" rel="stylesheet">
+<style>
+  :root {
+    --peach: #F7C5A8;
+    --coral: #E8896A;
+    --blush: #F2D4C8;
+    --cream: #FDF6F0;
+    --sage: #C8D8C0;
+    --lavender: #D8CEEA;
+    --butter: #F5E6C8;
+    --text-dark: #3D2B1F;
+    --text-mid: #7A5C4F;
+    --text-soft: #B89B8E;
+    --white: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'NanumSquareNeo', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  /* ─── 헤더 ─── */
+  header {
+    padding: 48px 24px 32px;
+    text-align: center;
+  }
+  header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--coral);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-family: 'NanumSquareNeo', sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-dark);
+    line-height: 1.4;
+  }
+  header p {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-soft);
+    line-height: 1.7;
+  }
+
+  /* ─── API 키 영역 ─── */
+  .api-section {
+    max-width: 520px;
+    margin: 0 auto 28px;
+    padding: 0 20px;
+  }
+  .api-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: var(--white);
+    border: 1.5px solid var(--blush);
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+  .api-row input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: var(--text-dark);
+    font-family: inherit;
+    background: transparent;
+  }
+  .api-row input::placeholder { color: var(--text-soft); }
+  .api-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 4px;
+    color: var(--text-soft);
+  }
+
+  /* ─── 주 입력 영역 ─── */
+  .main-input {
+    max-width: 520px;
+    margin: 0 auto 20px;
+    padding: 0 20px;
+  }
+  .topic-box {
+    background: var(--white);
+    border: 1.5px solid var(--blush);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .topic-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--coral);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .topic-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-family: 'NanumSquareNeo', sans-serif;
+    color: var(--text-dark);
+    resize: none;
+    line-height: 1.6;
+    background: transparent;
+  }
+  .topic-input::placeholder { color: var(--text-soft); font-style: italic; }
+
+  /* ─── 옵션 ─── */
+  .options-row {
+    max-width: 520px;
+    margin: 0 auto 24px;
+    padding: 0 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .opt-group { flex: 1; min-width: 140px; }
+  .opt-label {
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .opt-select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--blush);
+    border-radius: 10px;
+    background: var(--white);
+    font-size: 13px;
+    color: var(--text-dark);
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23B89B8E' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+
+  /* ─── 생성 버튼 ─── */
+  .generate-wrap {
+    max-width: 520px;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+  }
+  .btn-generate {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--coral), #D4745A);
+    color: var(--white);
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-family: 'NanumSquareNeo', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: opacity 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-generate:hover { opacity: 0.92; }
+  .btn-generate:active { transform: scale(0.99); }
+  .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ─── 로딩 ─── */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-soft);
+    font-size: 14px;
+  }
+  .loading .dot-wave span {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--coral);
+    border-radius: 50%;
+    margin: 0 3px;
+    animation: wave 1.2s ease-in-out infinite;
+  }
+  .loading .dot-wave span:nth-child(2) { animation-delay: 0.15s; }
+  .loading .dot-wave span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes wave {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-8px); }
+  }
+  .loading p { margin-top: 14px; font-style: italic; }
+
+  /* ─── 카드 결과 영역 ─── */
+  .cards-section {
+    max-width: 600px;
+    margin: 0 auto 60px;
+    padding: 0 20px;
+    display: none;
+  }
+  .cards-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .cards-header h2 {
+    font-family: 'NanumSquareNeo', sans-serif;
+    font-size: 16px;
+    color: var(--text-mid);
+  }
+  .btn-download-all {
+    padding: 8px 16px;
+    background: var(--white);
+    border: 1.5px solid var(--coral);
+    color: var(--coral);
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .btn-download-all:hover { background: var(--coral); color: var(--white); }
+
+  /* ─── 카드 그리드 ─── */
+  .cards-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .card-item {
+    background: var(--white);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(61,43,31,0.06);
+  }
+  .card-canvas-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--blush);
+  }
+  canvas.card-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .card-controls {
+    padding: 16px 18px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .card-num {
+    font-size: 11px;
+    color: var(--text-soft);
+    letter-spacing: 1px;
+    flex: 1;
+  }
+  .color-chips {
+    display: flex;
+    gap: 6px;
+  }
+  .color-chip {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .color-chip:hover { transform: scale(1.15); }
+  .color-chip.active { border-color: var(--text-mid); }
+  .btn-dl {
+    padding: 7px 14px;
+    background: var(--cream);
+    border: 1px solid var(--blush);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-mid);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn-dl:hover { background: var(--blush); }
+
+  /* ─── 에러 ─── */
+  .error-box {
+    display: none;
+    max-width: 520px;
+    margin: 0 auto 20px;
+    padding: 0 20px;
+  }
+  .error-inner {
+    background: #FFF0EE;
+    border: 1.5px solid #F7C5A8;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #C0522A;
+    line-height: 1.6;
+  }
+
+  /* ─── 푸터 ─── */
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--text-soft);
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">ritual card maker</div>
+  <h1>나를 갖는 시간 ✦</h1>
+  <p>주제를 입력하면 리추얼 카드 문구를 만들어드려요<br>인스타그램에 바로 올릴 수 있어요</p>
+</header>
+
+<!-- API 키 -->
+<div class="api-section">
+  <div class="api-row">
+    <input type="password" id="apiKey" placeholder="Gemini API Key 입력" autocomplete="off">
+    <button class="api-toggle" onclick="toggleKey()" id="keyToggle">👁</button>
+  </div>
+</div>
+
+<!-- 주제 입력 -->
+<div class="main-input">
+  <div class="topic-box">
+    <div class="topic-label">오늘의 주제</div>
+    <textarea class="topic-input" id="topicInput" rows="2"
+      placeholder="예) 아침 커피 한 잔의 의식, 고양이와 보내는 저녁, 혼자만의 산책..."></textarea>
+  </div>
+</div>
+
+<!-- 옵션 -->
+<div class="options-row">
+  <div class="opt-group">
+    <div class="opt-label">카드 수</div>
+    <select class="opt-select" id="cardCount">
+      <option value="3">3장</option>
+      <option value="4">4장</option>
+      <option value="5" selected>5장</option>
+      <option value="6">6장</option>
+    </select>
+  </div>
+  <div class="opt-group">
+    <div class="opt-label">문구 톤</div>
+    <select class="opt-select" id="toneSelect">
+      <option value="감성적">감성적 · 시적</option>
+      <option value="따뜻한">따뜻한 · 다정한</option>
+      <option value="단호한">단호한 · 미니멀</option>
+      <option value="유머러스한">유머러스 · 가벼운</option>
+    </select>
+  </div>
+</div>
+
+<!-- 생성 버튼 -->
+<div class="generate-wrap">
+  <button class="btn-generate" id="genBtn" onclick="generateCards()">
+    ✦ 카드 만들기
+  </button>
+</div>
+
+<!-- 에러 -->
+<div class="error-box" id="errorBox">
+  <div class="error-inner" id="errorMsg"></div>
+</div>
+
+<!-- 로딩 -->
+<div class="loading" id="loading">
+  <div class="dot-wave">
+    <span></span><span></span><span></span>
+  </div>
+  <p id="loadingMsg">문구를 만들고 있어요...</p>
+</div>
+
+<!-- 카드 결과 -->
+<div class="cards-section" id="cardsSection">
+  <div class="cards-header">
+    <h2 id="resultTitle">리추얼 카드</h2>
+    <button class="btn-download-all" onclick="downloadAll()">전체 저장</button>
+  </div>
+  <div class="cards-grid" id="cardsGrid"></div>
+</div>
+
+<footer>✦ 나를 갖는 시간 ✦</footer>
+
+<script>
+// ─── 팔레트 정의 ───
+const PALETTES = [
+  { name: 'peach',    bg: '#F7C5A8', text: '#3D2B1F', accent: '#E8896A', sub: '#7A5C4F' },
+  { name: 'blush',    bg: '#F2D4C8', text: '#3D2B1F', accent: '#C96A50', sub: '#7A5C4F' },
+  { name: 'butter',   bg: '#F5E6C8', text: '#3D2B1F', accent: '#C8903A', sub: '#7A5C4F' },
+  { name: 'sage',     bg: '#C8D8C0', text: '#2B3D28', accent: '#5A8050', sub: '#4A6040' },
+  { name: 'lavender', bg: '#D8CEEA', text: '#2B2040', accent: '#7A60B0', sub: '#5A4080' },
+  { name: 'cream',    bg: '#FDF6F0', text: '#3D2B1F', accent: '#E8896A', sub: '#B89B8E' },
+];
+
+const CHIP_COLORS = ['#F7C5A8','#F2D4C8','#F5E6C8','#C8D8C0','#D8CEEA','#FDF6F0'];
+
+let cardData = []; // { text, subtitle, palette }
+
+function toggleKey() {
+  const inp = document.getElementById('apiKey');
+  const btn = document.getElementById('keyToggle');
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  document.getElementById('errorMsg').textContent = msg;
+  box.style.display = 'block';
+}
+function hideError() { document.getElementById('errorBox').style.display = 'none'; }
+
+async function generateCards() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const topic = document.getElementById('topicInput').value.trim();
+  const count = parseInt(document.getElementById('cardCount').value);
+  const tone = document.getElementById('toneSelect').value;
+
+  if (!apiKey) { showError('Gemini API 키를 입력해주세요.'); return; }
+  if (!topic) { showError('주제를 입력해주세요.'); return; }
+  hideError();
+
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('cardsSection').style.display = 'none';
+
+  const loadingMsgs = ['문구를 만들고 있어요...','감성을 다듬는 중...','거의 다 됐어요 ✦'];
+  let li = 0;
+  const lInterval = setInterval(() => {
+    li = (li + 1) % loadingMsgs.length;
+    document.getElementById('loadingMsg').textContent = loadingMsgs[li];
+  }, 1800);
+
+  try {
+    const prompt = `
+당신은 감성적인 인스타그램 리추얼 카드 문구 작가입니다.
+
+주제: "${topic}"
+톤: ${tone}
+카드 수: ${count}장
+
+각 카드에 들어갈 문구를 만들어주세요.
+- 메인 문구: 15자 이내, 임팩트 있게
+- 서브 문구: 30자 이내, 메인을 부드럽게 받쳐주는 한 줄
+
+반드시 JSON 배열만 반환하세요. 다른 텍스트나 마크다운 없이 순수 JSON만:
+[
+  {"main": "메인 문구", "sub": "서브 문구"},
+  ...
+]
+`;
+
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.9, maxOutputTokens: 1000 }
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `API 오류 (${res.status})`);
+    }
+
+    const data = await res.json();
+    let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    raw = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(raw);
+
+    cardData = parsed.map((item, i) => ({
+      main: item.main || '',
+      sub: item.sub || '',
+      paletteIdx: i % PALETTES.length
+    }));
+
+    renderCards(topic);
+  } catch (e) {
+    showError('오류: ' + e.message);
+  } finally {
+    clearInterval(lInterval);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('genBtn').disabled = false;
+  }
+}
+
+function renderCards(topic) {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+  document.getElementById('resultTitle').textContent = `"${topic}" 리추얼 카드`;
+  document.getElementById('cardsSection').style.display = 'block';
+
+  cardData.forEach((card, idx) => {
+    const item = document.createElement('div');
+    item.className = 'card-item';
+
+    const canvasWrap = document.createElement('div');
+    canvasWrap.className = 'card-canvas-wrap';
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'card-canvas';
+    canvas.width = 1080;
+    canvas.height = 1080;
+    canvas.dataset.idx = idx;
+
+    canvasWrap.appendChild(canvas);
+
+    const controls = document.createElement('div');
+    controls.className = 'card-controls';
+
+    const num = document.createElement('div');
+    num.className = 'card-num';
+    num.textContent = `CARD ${String(idx + 1).padStart(2, '0')}`;
+
+    const chips = document.createElement('div');
+    chips.className = 'color-chips';
+    CHIP_COLORS.forEach((color, ci) => {
+      const chip = document.createElement('div');
+      chip.className = 'color-chip' + (ci === card.paletteIdx ? ' active' : '');
+      chip.style.background = color;
+      chip.title = PALETTES[ci].name;
+      chip.onclick = () => {
+        cardData[idx].paletteIdx = ci;
+        chips.querySelectorAll('.color-chip').forEach((c, i) => c.classList.toggle('active', i === ci));
+        drawCard(canvas, cardData[idx], idx + 1, cardData.length);
+      };
+      chips.appendChild(chip);
+    });
+
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'btn-dl';
+    dlBtn.textContent = '저장';
+    dlBtn.onclick = () => downloadCard(canvas, idx + 1);
+
+    controls.appendChild(num);
+    controls.appendChild(chips);
+    controls.appendChild(dlBtn);
+
+    item.appendChild(canvasWrap);
+    item.appendChild(controls);
+    grid.appendChild(item);
+
+    drawCard(canvas, card, idx + 1, cardData.length);
+  });
+}
+
+function drawCard(canvas, card, num, total) {
+  const ctx = canvas.getContext('2d');
+  const W = 1080, H = 1080;
+  const pal = PALETTES[card.paletteIdx];
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 배경
+  ctx.fillStyle = pal.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // 미묘한 그라디언트 오버레이
+  const grad = ctx.createRadialGradient(W * 0.3, H * 0.25, 0, W * 0.5, H * 0.5, W * 0.8);
+  grad.addColorStop(0, 'rgba(255,255,255,0.18)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.04)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // 상단 장식선
+  ctx.strokeStyle = pal.accent;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.35;
+  ctx.beginPath();
+  ctx.moveTo(80, 80);
+  ctx.lineTo(W - 80, 80);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // 작은 다이아몬드 장식
+  drawDiamond(ctx, W / 2, 80, 7, pal.accent, 0.6);
+
+  // 카드 번호
+  ctx.font = '500 26px "NanumSquareNeo", sans-serif';
+  ctx.fillStyle = pal.sub;
+  ctx.globalAlpha = 0.5;
+  ctx.textAlign = 'center';
+  ctx.fillText(`0${num} / 0${total}`, W / 2, 136);
+  ctx.globalAlpha = 1;
+
+  // 메인 문구
+  ctx.font = '800 72px "NanumSquareNeo", sans-serif';
+  ctx.fillStyle = pal.text;
+  ctx.textAlign = 'center';
+  wrapText(ctx, card.main, W / 2, H / 2 - 40, W - 160, 90);
+
+  // 구분선
+  ctx.strokeStyle = pal.accent;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.4;
+  const lineY = H / 2 + 80;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 60, lineY);
+  ctx.lineTo(W / 2 + 60, lineY);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // 서브 문구
+  ctx.font = '400 36px "NanumSquareNeo", sans-serif';
+  ctx.fillStyle = pal.sub;
+  ctx.globalAlpha = 0.85;
+  ctx.textAlign = 'center';
+  wrapText(ctx, card.sub, W / 2, lineY + 60, W - 200, 48);
+  ctx.globalAlpha = 1;
+
+  // 하단 장식선
+  ctx.strokeStyle = pal.accent;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.35;
+  ctx.beginPath();
+  ctx.moveTo(80, H - 80);
+  ctx.lineTo(W - 80, H - 80);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // 하단 브랜드
+  ctx.font = '300 22px "NanumSquareNeo", sans-serif';
+  ctx.fillStyle = pal.sub;
+  ctx.globalAlpha = 0.4;
+  ctx.textAlign = 'center';
+  ctx.fillText('✦ 나를 갖는 시간 ✦', W / 2, H - 44);
+  ctx.globalAlpha = 1;
+}
+
+function drawDiamond(ctx, x, y, size, color, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size);
+  ctx.lineTo(x + size, y);
+  ctx.lineTo(x, y + size);
+  ctx.lineTo(x - size, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  if (!text) return;
+  const words = text.split('');
+  let line = '';
+  let lines = [];
+
+  // 한국어는 글자 단위로, 공백 있으면 단어 단위로
+  if (text.includes(' ')) {
+    const wordArr = text.split(' ');
+    for (let i = 0; i < wordArr.length; i++) {
+      const testLine = line + (line ? ' ' : '') + wordArr[i];
+      if (ctx.measureText(testLine).width > maxWidth && line) {
+        lines.push(line);
+        line = wordArr[i];
+      } else {
+        line = testLine;
+      }
+    }
+    if (line) lines.push(line);
+  } else {
+    // 한국어 글자 단위
+    for (let i = 0; i < words.length; i++) {
+      const testLine = line + words[i];
+      if (ctx.measureText(testLine).width > maxWidth && line) {
+        lines.push(line);
+        line = words[i];
+      } else {
+        line = testLine;
+      }
+    }
+    if (line) lines.push(line);
+  }
+
+  const totalH = lines.length * lineHeight;
+  const startY = y - totalH / 2 + lineHeight / 2;
+  lines.forEach((l, i) => {
+    ctx.fillText(l, x, startY + i * lineHeight);
+  });
+}
+
+function downloadCard(canvas, num) {
+  const link = document.createElement('a');
+  link.download = `ritual_card_${String(num).padStart(2, '0')}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function downloadAll() {
+  const canvases = document.querySelectorAll('.card-canvas');
+  canvases.forEach((canvas, i) => {
+    setTimeout(() => downloadCard(canvas, i + 1), i * 300);
+  });
+}
+</script>
+</body>
+</html>
