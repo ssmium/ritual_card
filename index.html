@@ -1,944 +1,1140 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>나를 갖는 시간 ✦ 리추얼 카드 메이커</title>
-<link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-neo.css" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MAGAZINIE — Card News Editor</title>
+<meta name="description" content="기사/주제 기반 AI 카드뉴스 생성 및 편집" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23111%27/%3E%3Ctext x=%2732%27 y=%2742%27 font-size=%2734%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Georgia%27 font-weight=%27900%27%3EM%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css" />
 <style>
-  :root {
-    --peach: #F7C5A8;
-    --coral: #E8896A;
-    --blush: #F2D4C8;
-    --cream: #FDF6F0;
-    --sage: #C8D8C0;
-    --lavender: #D8CEEA;
-    --butter: #F5E6C8;
-    --text-dark: #3D2B1F;
-    --text-mid: #7A5C4F;
-    --text-soft: #B89B8E;
-    --white: #FFFFFF;
-    .edit-box {
-  padding: 14px 16px 4px;
-  border-bottom: 1px solid var(--blush);
-  background: #fffaf7;
+:root {
+  --ink: #111111; --muted: #737373; --rule: #ebebeb;
+  --bg: #ffffff; --soft: #f5f5f5; --danger: #d93838;
+  --g1: #ff9ec7; --g2: #b9a3f5; --ink2: #141019; --mut2: #6c6678; --line2: #ececf1;
 }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif; letter-spacing: -0.01em; -webkit-font-smoothing: antialiased; color: var(--ink); }
 
-.edit-field {
-  margin-bottom: 10px;
+/* 사이드바 */
+.app-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 232px; background: #fff; border-right: 1px solid var(--rule); padding: 28px 20px; display: flex; flex-direction: column; gap: 24px; z-index: 20; overflow-y: auto; }
+.sidebar-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #111; padding-bottom: 24px; border-bottom: 1px solid var(--rule); }
+.sidebar-logo-mark { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: #111; color: #fff; font-family: Georgia, serif; font-weight: 800; font-size: 14px; border-radius: 5px; flex-shrink: 0; }
+.sidebar-logo-text { font-size: 12px; font-weight: 800; letter-spacing: .18em; }
+.sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+.sidebar-nav-title { padding: 0 14px 6px; font-size: 11px; font-weight: 700; letter-spacing: .18em; color: #737373; text-transform: uppercase; }
+.sidebar-nav a, .sidebar-nav .nav-current { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; color: #737373; background: transparent; transition: all .12s; }
+.sidebar-nav .nav-current { color: #111; background: #f5f5f5; }
+.sidebar-nav .num { color: #737373; font-size: 13px; width: 14px; }
+.side-steps { border-top: 1px solid var(--rule); padding-top: 18px; }
+.side-steps-head { font-size: 11px; font-weight: 700; letter-spacing: .12em; color: #737373; margin-bottom: 14px; }
+.side-step-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.side-step { display: flex; gap: 9px; padding: 11px 12px; border-radius: 14px; background: linear-gradient(120deg,rgba(255,158,199,.10),rgba(185,163,245,.10)); border: 1px solid rgba(236,236,241,.95); }
+.side-step-num { width: 26px; height: 26px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; background: linear-gradient(140deg,var(--g1),var(--g2)); flex-shrink: 0; }
+.side-step-title { font-size: 12px; font-weight: 800; line-height: 1.3; color: #141019; }
+.side-step-desc { font-size: 11px; color: #6c6678; line-height: 1.45; margin-top: 3px; word-break: keep-all; }
+
+/* 메인 */
+.app-content { margin-left: 232px; min-height: 100vh; display: flex; flex-direction: column; background: #fff; }
+.app-content .wrap { max-width: 1180px; padding: 44px 56px 80px; width: 100%; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+.section-label { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+.lead { color: var(--muted); font-size: 14px; line-height: 1.6; margin-top: 8px; max-width: 620px; }
+.worker-status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--rule); background: #fff; font-size: 12px; font-weight: 700; color: #737373; white-space: nowrap; }
+.worker-status-dot { width: 7px; height: 7px; border-radius: 50%; background: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
+
+/* 검색 */
+.workspace-card { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 20px; margin-bottom: 18px; }
+.search-bar { display: flex; gap: 10px; align-items: center; }
+.search-input-wrap { flex: 1; position: relative; }
+.search-input-wrap input { width: 100%; font-family: inherit; font-size: 14px; color: var(--ink); background: var(--soft); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 16px; letter-spacing: -.01em; transition: border-color .12s; }
+.search-input-wrap input:focus { outline: none; border-color: var(--ink); background: #fff; }
+.search-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; min-height: 0; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: linear-gradient(120deg,rgba(255,158,199,.16),rgba(185,163,245,.16)); border: 1px solid rgba(185,163,245,.28); font-size: 12px; font-weight: 800; color: #141019; }
+.chip-x { opacity: .55; cursor: pointer; font-style: normal; }
+.suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.suggest button { border: 1px solid var(--rule); background: #fff; border-radius: 999px; padding: 5px 10px; font-size: 11px; cursor: pointer; color: #6c6678; font-weight: 700; font-family: inherit; }
+.suggest button:hover { border-color: #111; color: #111; }
+.manual-box { margin-top: 14px; border: 1px dashed #dad8e1; border-radius: 10px; padding: 14px; background: #fbfbfd; }
+.manual-title { font-size: 13px; font-weight: 800; margin-bottom: 5px; }
+.manual-hint { font-size: 12px; color: #737373; line-height: 1.55; margin-bottom: 8px; word-break: keep-all; }
+.manual-box textarea { width: 100%; min-height: 72px; border: 1px solid var(--rule); border-radius: 8px; padding: 10px; font-family: inherit; font-size: 13px; resize: vertical; outline: none; }
+
+
+/* 생성 방식 탭 */
+.mode-tabs { display: flex; gap: 8px; margin-bottom: 14px; padding: 4px; background: var(--soft); border-radius: 10px; }
+.mode-tab { flex: 1; border: 0; background: transparent; border-radius: 8px; padding: 11px 12px; font-family: inherit; font-size: 13px; font-weight: 900; color: #737373; cursor: pointer; transition: all .12s; }
+.mode-tab.active { background: #111; color: #fff; box-shadow: rgba(0,0,0,.10) 0 8px 18px -12px; }
+.mode-panel { display: none; }
+.mode-panel.active { display: block; }
+.topic-maker { display: grid; gap: 12px; }
+.topic-maker textarea { width: 100%; min-height: 118px; border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; font-family: inherit; font-size: 14px; line-height: 1.65; resize: vertical; outline: none; background: var(--soft); }
+.topic-maker textarea:focus { border-color: #111; background: #fff; }
+.topic-options { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+.topic-field label { display: block; font-size: 11px; font-weight: 800; color: #737373; letter-spacing: .12em; margin-bottom: 6px; }
+.topic-field select { width: 100%; height: 40px; border: 1px solid var(--rule); border-radius: 8px; background: #fff; padding: 0 12px; font-family: inherit; font-size: 13px; color: #111; outline: none; }
+.topic-help { font-size: 12px; color: #737373; line-height: 1.6; word-break: keep-all; }
+@media (max-width: 820px) { .topic-options { grid-template-columns: 1fr; } .mode-tabs { flex-direction: column; } }
+
+/* 결과 */
+.results { display: none; }
+.result-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #737373; font-size: 13px; margin-bottom: 12px; }
+.article-list { display: grid; gap: 8px; }
+.article { display: grid; grid-template-columns: 54px 1fr auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; cursor: pointer; transition: border-color .12s, box-shadow .12s, transform .12s; }
+.article:hover, .article.selected { border-color: #111; box-shadow: rgba(20,16,25,.13) 0 12px 28px -20px; transform: translateY(-1px); }
+.thumb { width: 54px; height: 50px; border-radius: 8px; background: linear-gradient(140deg,rgba(255,158,199,.2),rgba(185,163,245,.22)); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.article-info { min-width: 0; }
+.article-title { font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.article-sub, .article-desc { font-size: 11px; color: #737373; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.article-sub { margin-bottom: 3px; }
+.article button { white-space: nowrap; }
+
+/* 카드 패널 */
+.cards-panel { display: none; }
+.source-status { display: none; margin-bottom: 14px; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.55; word-break: keep-all; }
+.source-status.ok { display: block; background: #f0fdf4; border: 1px solid #bbf7d0; color: #047857; }
+.source-status.warn { display: block; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; }
+.download-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+.hint { font-size: 13px; color: #737373; line-height: 1.55; word-break: keep-all; }
+.card-scroll { overflow-x: auto; padding: 14px 4px 12px; }
+.card-row { display: flex; gap: 18px; min-width: max-content; }
+.card-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.card-label { font-size: 11px; color: #737373; font-weight: 800; letter-spacing: .18em; }
+.card-wrap { width: 240px; height: 240px; border-radius: 16px; position: relative; background: transparent; }
+.card-inner { position: relative; width: 100%; height: 100%; border-radius: 16px; overflow: hidden; box-shadow: rgba(0,0,0,.20) 0 18px 34px -20px, rgba(0,0,0,.08) 0 6px 14px -8px; }
+.align-row { display: flex; gap: 8px; align-items: center; width: 240px; }
+.align-row button { flex: 1; height: 34px; border: 1px solid var(--rule); background: #fff; border-radius: 7px; cursor: pointer; font-weight: 800; color: #6c6678; font-family: inherit; }
+.img-btn { width: 240px; padding: 9px 16px; border: 1px solid var(--rule); background: #fff; border-radius: 8px; cursor: pointer; font-weight: 700; font-family: inherit; font-size: 13px; }
+.edit-row { display: flex; gap: 18px; overflow-x: auto; padding-top: 16px; }
+.edit-panel { width: 240px; min-width: 240px; border: 1px solid var(--rule); border-radius: 10px; padding: 12px; background: #fff; }
+.edit-label { font-size: 10px; font-weight: 800; color: #737373; margin: 8px 0 5px; letter-spacing: .08em; }
+.edit-panel textarea { width: 100%; border: 1px solid var(--rule); border-radius: 8px; padding: 8px; font-family: inherit; font-size: 12px; resize: vertical; outline: none; }
+.title-input { min-height: 50px; } .body-input { min-height: 108px; }
+.color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.color-item { display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--rule); border-radius: 8px; padding: 6px 8px; font-size: 11px; font-weight: 700; color: #6c6678; }
+.color-item input[type="color"] { width: 34px; height: 24px; border: none; background: transparent; padding: 0; cursor: pointer; }
+.size-row { display: flex; align-items: center; gap: 8px; margin-top: 9px; font-size: 11px; color: #6c6678; }
+.size-row input { flex: 1; accent-color: #111; }
+.apply { width: 100%; justify-content: center; margin-top: 10px; }
+.caption { background: #fbfbfd; border: 1px solid var(--rule); border-radius: 10px; padding: 16px; margin-top: 16px; }
+.caption-title { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 800; margin-bottom: 10px; }
+.caption-line { font-size: 13px; line-height: 1.7; margin-bottom: 5px; color: #141019; }
+.hashtag-box { margin-top: 10px; color: #555; font-size: 13px; line-height: 1.7; }
+
+/* 공통 버튼 */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 6px; border: 1px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer; font-size: 13px; font-weight: 700; letter-spacing: .01em; transition: opacity .12s; font-family: inherit; text-decoration: none; }
+.btn:hover { opacity: .85; }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--rule); }
+.btn.ghost:hover { border-color: var(--ink); opacity: 1; }
+
+
+/* 기사 미리보기 모달 */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9000; display: none; align-items: center; justify-content: center; padding: 24px; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: #fff; border-radius: 14px; width: 100%; max-width: 680px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 24px 64px rgba(0,0,0,.22); }
+.modal-head { padding: 22px 24px 16px; border-bottom: 1px solid var(--rule); }
+.modal-head-label { font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--muted); margin-bottom: 6px; }
+.modal-head-title { font-size: 17px; font-weight: 900; letter-spacing: -.02em; line-height: 1.4; word-break: keep-all; }
+.modal-head-meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.modal-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.modal-body-text { font-size: 14px; line-height: 1.9; color: #222; word-break: keep-all; white-space: pre-wrap; letter-spacing: -.01em; }
+.modal-body-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 32px 0; }
+.modal-foot { padding: 16px 24px; border-top: 1px solid var(--rule); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* 로딩/토스트 */
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #111; color: #fff; border-radius: 10px; padding: 10px 18px; font-size: 13px; z-index: 9999; opacity: 0; transition: .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+.loading { position: fixed; inset: 0; background: rgba(255,255,255,.86); display: none; align-items: center; justify-content: center; z-index: 9990; flex-direction: column; gap: 12px; }
+.loading.show { display: flex; }
+.spinner { width: 34px; height: 34px; border: 3px solid #ddd; border-top-color: #111; border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 모바일 */
+@media (max-width: 820px) {
+  .app-sidebar { display: none; }
+  .app-content { margin-left: 0; }
+  .app-content .wrap { padding: 24px 16px 80px; }
+  .page-head { display: block; }
+  .download-row { display: block; }
+  .download-row .btn { margin-top: 12px; }
+  .card-wrap, .img-btn, .align-row { width: 220px; }
+  .card-wrap { height: 220px; }
+  .edit-panel { width: 220px; min-width: 220px; }
+  .article { grid-template-columns: 46px 1fr; }
+  .article button { grid-column: 1/-1; }
+  .thumb { width: 46px; height: 44px; }
 }
-
-.edit-field label {
-  display: block;
-  font-size: 10px;
-  color: var(--text-soft);
-  margin-bottom: 4px;
-  letter-spacing: 1px;
-}
-
-.edit-field textarea {
-  width: 100%;
-  min-height: 32px;
-  resize: vertical;
-  border: 1px solid var(--blush);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-family: inherit;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--text-dark);
-  outline: none;
-  background: var(--white);
-}
-
-.edit-field textarea:focus {
-  border-color: var(--coral);
-}
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'NanumSquareNeo', sans-serif;
-    background: var(--cream);
-    min-height: 100vh;
-    color: var(--text-dark);
-  }
-
-  /* ─── 헤더 ─── */
-  header {
-    padding: 48px 24px 32px;
-    text-align: center;
-  }
-  header .eyebrow {
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: var(--coral);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-  header h1 {
-    font-family: 'NanumSquareNeo', sans-serif;
-    font-size: 28px;
-    font-weight: 600;
-    color: var(--text-dark);
-    line-height: 1.4;
-  }
-  header p {
-    margin-top: 10px;
-    font-size: 13px;
-    color: var(--text-soft);
-    line-height: 1.7;
-  }
-
-  /* ─── API 키 영역 ─── */
-  .api-section {
-    max-width: 520px;
-    margin: 0 auto 28px;
-    padding: 0 20px;
-  }
-  .api-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    background: var(--white);
-    border: 1.5px solid var(--blush);
-    border-radius: 12px;
-    padding: 10px 14px;
-  }
-  .api-row input {
-    flex: 1;
-    border: none;
-    outline: none;
-    font-size: 13px;
-    color: var(--text-dark);
-    font-family: inherit;
-    background: transparent;
-  }
-  .api-row input::placeholder { color: var(--text-soft); }
-  .api-toggle {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 2px 4px;
-    color: var(--text-soft);
-  }
-
-  /* ─── 주 입력 영역 ─── */
-  .main-input {
-    max-width: 520px;
-    margin: 0 auto 20px;
-    padding: 0 20px;
-  }
-  .topic-box {
-    background: var(--white);
-    border: 1.5px solid var(--blush);
-    border-radius: 16px;
-    padding: 20px;
-  }
-  .topic-label {
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: var(--coral);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .topic-input {
-    width: 100%;
-    border: none;
-    outline: none;
-    font-size: 16px;
-    font-family: 'NanumSquareNeo', sans-serif;
-    color: var(--text-dark);
-    resize: none;
-    line-height: 1.6;
-    background: transparent;
-  }
-  .topic-input::placeholder { color: var(--text-soft); font-style: italic; }
-
-  /* ─── 옵션 ─── */
-  .options-row {
-    max-width: 520px;
-    margin: 0 auto 24px;
-    padding: 0 20px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .opt-group { flex: 1; min-width: 140px; }
-  .opt-label {
-    font-size: 11px;
-    color: var(--text-soft);
-    margin-bottom: 6px;
-    letter-spacing: 1px;
-  }
-  .opt-select {
-    width: 100%;
-    padding: 9px 12px;
-    border: 1.5px solid var(--blush);
-    border-radius: 10px;
-    background: var(--white);
-    font-size: 13px;
-    color: var(--text-dark);
-    font-family: inherit;
-    outline: none;
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23B89B8E' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-  }
-
-  /* ─── 생성 버튼 ─── */
-  .generate-wrap {
-    max-width: 520px;
-    margin: 0 auto 40px;
-    padding: 0 20px;
-  }
-  .btn-generate {
-    width: 100%;
-    padding: 16px;
-    background: linear-gradient(135deg, var(--coral), #D4745A);
-    color: var(--white);
-    border: none;
-    border-radius: 14px;
-    font-size: 15px;
-    font-family: 'NanumSquareNeo', sans-serif;
-    font-weight: 500;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: opacity 0.2s, transform 0.1s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  .btn-generate:hover { opacity: 0.92; }
-  .btn-generate:active { transform: scale(0.99); }
-  .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* ─── 로딩 ─── */
-  .loading {
-    display: none;
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-soft);
-    font-size: 14px;
-  }
-  .loading .dot-wave span {
-    display: inline-block;
-    width: 8px; height: 8px;
-    background: var(--coral);
-    border-radius: 50%;
-    margin: 0 3px;
-    animation: wave 1.2s ease-in-out infinite;
-  }
-  .loading .dot-wave span:nth-child(2) { animation-delay: 0.15s; }
-  .loading .dot-wave span:nth-child(3) { animation-delay: 0.3s; }
-  @keyframes wave {
-    0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-8px); }
-  }
-  .loading p { margin-top: 14px; font-style: italic; }
-
-  /* ─── 카드 결과 영역 ─── */
-  .cards-section {
-    max-width: 600px;
-    margin: 0 auto 60px;
-    padding: 0 20px;
-    display: none;
-  }
-  .cards-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  .cards-header h2 {
-    font-family: 'NanumSquareNeo', sans-serif;
-    font-size: 16px;
-    color: var(--text-mid);
-  }
-  .btn-download-all {
-    padding: 8px 16px;
-    background: var(--white);
-    border: 1.5px solid var(--coral);
-    color: var(--coral);
-    border-radius: 20px;
-    font-size: 12px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.2s;
-  }
-  .btn-download-all:hover { background: var(--coral); color: var(--white); }
-
-  /* ─── 카드 그리드 ─── */
-  .cards-grid {
-  display: flex;
-  flex-direction: row;
-  gap: 18px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 16px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.cards-grid::-webkit-scrollbar {
-  height: 6px;
-}
-
-.cards-grid::-webkit-scrollbar-thumb {
-  background: var(--blush);
-  border-radius: 999px;
-}
-
-.card-item {
-  flex: 0 0 min(82vw, 380px);
-  scroll-snap-align: center;
-  background: var(--white);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(61,43,31,0.06);
-}
-
-  .card-item {
-    background: var(--white);
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(61,43,31,0.06);
-  }
-  .card-canvas-wrap {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1;
-    background: var(--blush);
-  }
-  canvas.card-canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-
-  .card-controls {
-    padding: 16px 18px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .card-num {
-    font-size: 11px;
-    color: var(--text-soft);
-    letter-spacing: 1px;
-    flex: 1;
-  }
-  .color-chips {
-    display: flex;
-    gap: 6px;
-  }
-  .color-chip {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: border-color 0.15s, transform 0.15s;
-  }
-  .color-chip:hover { transform: scale(1.15); }
-  .color-chip.active { border-color: var(--text-mid); }
-  .btn-dl {
-    padding: 7px 14px;
-    background: var(--cream);
-    border: 1px solid var(--blush);
-    border-radius: 8px;
-    font-size: 12px;
-    color: var(--text-mid);
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.15s;
-  }
-  .btn-dl:hover { background: var(--blush); }
-
-  /* ─── 에러 ─── */
-  .error-box {
-    display: none;
-    max-width: 520px;
-    margin: 0 auto 20px;
-    padding: 0 20px;
-  }
-  .error-inner {
-    background: #FFF0EE;
-    border: 1.5px solid #F7C5A8;
-    border-radius: 12px;
-    padding: 14px 18px;
-    font-size: 13px;
-    color: #C0522A;
-    line-height: 1.6;
-  }
-
-  /* ─── 푸터 ─── */
-  footer {
-    text-align: center;
-    padding: 20px;
-    font-size: 11px;
-    color: var(--text-soft);
-    letter-spacing: 1px;
-  }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="eyebrow">ritual card maker</div>
-  <h1>나를 갖는 시간 ✦</h1>
-  <p>주제를 입력하면 리추얼 카드 문구를 만들어드려요<br>인스타그램에 바로 올릴 수 있어요</p>
-</header>
+<nav class="app-sidebar">
+  <a class="sidebar-logo" href="index.html">
+    <span class="sidebar-logo-mark">M</span>
+    <span class="sidebar-logo-text">MAGAZINIE</span>
+  </a>
+  <div class="sidebar-nav">
+    <div class="sidebar-nav-title">Make</div>
+    <a href="magazine.html"><span class="num">①</span>매거진 설정</a>
+    <div class="nav-current"><span class="num">②</span>카드뉴스 만들기</div>
+  </div>
+  <div class="side-steps">
+    <div class="side-steps-head">카드뉴스 만드는 순서</div>
+    <ol class="side-step-list">
+      <li class="side-step"><span class="side-step-num">1</span><span><b class="side-step-title">기사/주제 입력</b><br><span class="side-step-desc">뉴스를 검색하거나 직접 주제를 입력해요.</span></span></li>
+      <li class="side-step"><span class="side-step-num">2</span><span><b class="side-step-title">소스 선택</b><br><span class="side-step-desc">기사 또는 주제 기준으로 카드를 만들어요.</span></span></li>
+      <li class="side-step"><span class="side-step-num">3</span><span><b class="side-step-title">편집</b><br><span class="side-step-desc">문장·색상·이미지를 다듬어요.</span></span></li>
+      <li class="side-step"><span class="side-step-num">4</span><span><b class="side-step-title">저장</b><br><span class="side-step-desc">PNG/ZIP으로 다운로드해요.</span></span></li>
+    </ol>
+  </div>
+</nav>
 
-<!-- API 키 -->
-<div class="api-section">
-  <div class="api-row" style="margin-bottom:8px;">
-    <span style="font-size:12px;color:var(--text-soft);min-width:52px;">Gemini</span>
-    <input type="password" id="geminiKey" placeholder="Gemini API Key (우선 사용)" autocomplete="off">
-    <button class="api-toggle" onclick="toggleKey('geminiKey','geminiToggle')" id="geminiToggle">👁</button>
+<main class="app-content">
+  <div class="wrap">
+
+    <div class="page-head">
+      <div>
+        <div class="section-label">Step 2</div>
+        <h1>카드뉴스 만들기</h1>
+        <p class="lead">기사 검색 또는 직접 입력한 주제로 카드뉴스를 만들고, 가로 미리보기와 카드별 편집 패널에서 문장·색상·이미지를 다듬어요.</p>
+      </div>
+      <span class="worker-status-pill">
+        <span class="worker-status-dot"></span>
+        <span id="worker-version">Worker 확인 중</span>
+      </span>
+    </div>
+
+    <!-- 생성 방식 -->
+    <section class="workspace-card">
+      <div class="mode-tabs" role="tablist" aria-label="카드뉴스 생성 방식 선택">
+        <button type="button" id="tab-article" class="mode-tab active" onclick="switchMode('article')">기사로 만들기</button>
+        <button type="button" id="tab-topic" class="mode-tab" onclick="switchMode('topic')">주제로 만들기</button>
+      </div>
+
+      <!-- 기사 기반 -->
+      <div id="article-panel" class="mode-panel active">
+        <div class="search-bar">
+          <div class="search-input-wrap">
+            <input id="search-input" type="text" placeholder="키워드를 입력하세요 (예: 올리브영, 장원영, 무신사)" />
+          </div>
+          <button class="btn" onclick="searchNews()">검색</button>
+        </div>
+
+        <div class="search-chips" id="search-chips"></div>
+        <div class="suggest" id="search-suggest"></div>
+
+        <div class="manual-box">
+          <div class="manual-title">본문 직접 붙여넣기 옵션</div>
+          <div class="manual-hint">언론사 본문 수집이 막힌 경우에만 사용하세요. 붙여넣은 본문은 선택 기사와 강하게 일치할 때만 사용합니다.</div>
+          <textarea id="manual-text" placeholder="선택 사항: 기사 본문을 직접 붙여넣기"></textarea>
+        </div>
+      </div>
+
+      <!-- 주제 기반 -->
+      <div id="topic-panel" class="mode-panel">
+        <div class="topic-maker">
+          <textarea id="topic-input" placeholder="예: 주말에 나를 돌보는 방법, 여름에 가기 좋은 카페, 첫 출근 전 준비할 것"></textarea>
+          <div class="topic-options">
+            <div class="topic-field">
+              <label for="topic-tone">문구 톤</label>
+              <select id="topic-tone">
+                <option value="putput">다정한 감성 · putput 느낌</option>
+                <option value="trend">트렌드 매거진형</option>
+                <option value="info">정보 정리형</option>
+                <option value="minimal">미니멀한 한 줄형</option>
+              </select>
+            </div>
+            <div class="topic-field">
+              <label for="topic-count">카드 수</label>
+              <select id="topic-count">
+                <option value="5" selected>5장</option>
+                <option value="6">6장</option>
+                <option value="7">7장</option>
+              </select>
+            </div>
+            <button type="button" class="btn" onclick="generateFromTopic()">카드뉴스 만들기</button>
+          </div>
+          <div class="topic-help">생성 후 아래 가로 카드 미리보기와 카드별 편집 패널에서 문장·색상·이미지를 직접 수정할 수 있어요.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 결과 -->
+    <section id="results-panel" class="workspace-card results">
+      <div class="result-meta">
+        <span><b>NAVER</b> 검색 결과 · <span id="result-source">-</span></span>
+        <span><span id="result-count">0</span>건</span>
+      </div>
+      <div id="article-list" class="article-list"></div>
+    </section>
+
+    <!-- 카드 패널 -->
+    <section id="cards-panel" class="workspace-card cards-panel">
+      <div id="source-status" class="source-status"></div>
+      <div class="download-row">
+        <div>
+          <div class="hint"><b>카드 저장하기</b> — 생성된 카드뉴스를 옆으로 스크롤해서 확인하세요.</div>
+          <div class="hint">각 카드 하단에서 정렬·이미지를 바꾸고, 아래 편집 패널에서 문장을 다듬을 수 있어요.</div>
+        </div>
+        <button type="button" class="btn ghost" onclick="openPreview()">📱 인스타 미리보기</button>
+        <button type="button" class="btn ghost" onclick="shareCards()">🔗 팀 공유</button>
+        <button type="button" class="btn" onclick="downloadAll()">⬇ 전체 ZIP 다운로드</button>
+      </div>
+      <div class="card-scroll"><div id="card-row" class="card-row"></div></div>
+      <div id="edit-row" class="edit-row"></div>
+      <div class="caption">
+        <div class="caption-title">캡션 <button type="button" class="btn ghost" onclick="copyCaption()">전체 복사</button></div>
+        <div id="caption-box"></div>
+        <div id="hashtag-box" class="hashtag-box"></div>
+      </div>
+    </section>
+
   </div>
-  <div class="api-row">
-    <span style="font-size:12px;color:var(--text-soft);min-width:52px;">Claude</span>
-    <input type="password" id="claudeKey" placeholder="Claude API Key (한도 초과 시 폴백)" autocomplete="off">
-    <button class="api-toggle" onclick="toggleKey('claudeKey','claudeToggle')" id="claudeToggle">👁</button>
+</main>
+
+
+<!-- 기사 미리보기 모달 -->
+<div id="article-modal" class="modal-overlay" onclick="closeArticleModal(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div class="modal-head-label">기사 본문 미리보기</div>
+          <div id="modal-title" class="modal-head-title"></div>
+          <div id="modal-meta" class="modal-head-meta"></div>
+        </div>
+        <a id="modal-origin-link" href="#" target="_blank" class="btn ghost" style="white-space:nowrap;flex-shrink:0;font-size:12px;padding:8px 12px;">원문 보기 ↗</a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="modal-body-text" class="modal-body-text"></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn ghost" onclick="closeArticleModal()">닫기</button>
+      <button type="button" class="btn" id="modal-generate-btn" onclick="generateFromModal()">이 기사로 카드뉴스 만들기 →</button>
+    </div>
   </div>
-  <div style="font-size:11px;color:var(--text-soft);margin-top:6px;padding:0 4px;">Gemini 한도 초과 시 Claude로 자동 전환돼요</div>
 </div>
 
-<!-- 주제 입력 -->
-<div class="main-input">
-  <div class="topic-box">
-    <div class="topic-label">오늘의 주제</div>
-    <textarea class="topic-input" id="topicInput" rows="2"
-      placeholder="예) 아침 커피 한 잔의 의식, 고양이와 보내는 저녁, 혼자만의 산책..."></textarea>
+
+<!-- 인스타 미리보기 모달 -->
+<div id="preview-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.3);">
+    <!-- 헤더 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #efefef;">
+      <span style="font-size:13px;font-weight:800;">📱 인스타그램 미리보기</span>
+      <button type="button" id="preview-close-btn" style="border:1px solid #ddd;background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700;">닫기</button>
+    </div>
+    <!-- 프로필 -->
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #efefef;">
+      <div id="preview-profile-initial" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0;">H</div>
+      <div>
+        <div id="preview-profile-name" style="font-size:13px;font-weight:800;">hypokeimenon</div>
+        <div style="font-size:11px;color:#737373;">sponsored</div>
+      </div>
+      <div style="margin-left:auto;font-size:18px;color:#262626;">···</div>
+    </div>
+    <!-- 카드 이미지 -->
+    <div style="background:#111;position:relative;">
+      <div id="preview-card-img" style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden;"></div>
+      <!-- 네비 버튼 -->
+      <div id="preview-prev-btn" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.88);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.25);user-select:none;">‹</div>
+      <div id="preview-next-btn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.88);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.25);user-select:none;">›</div>
+      <!-- 카운터 -->
+      <div id="preview-counter" style="position:absolute;top:8px;right:10px;font-size:11px;font-weight:700;color:rgba(255,255,255,.7);">1 / 7</div>
+      <!-- 닷 -->
+      <div id="preview-dots" style="position:absolute;bottom:8px;left:0;right:0;display:flex;justify-content:center;gap:4px;pointer-events:none;"></div>
+    </div>
+    <!-- 액션 -->
+    <div style="padding:10px 14px;background:#fff;">
+      <div style="display:flex;gap:14px;margin-bottom:8px;font-size:20px;">
+        <span>🤍</span><span>💬</span><span>📤</span>
+        <span style="margin-left:auto;">🔖</span>
+      </div>
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px;">좋아요 <b>128개</b></div>
+      <div id="preview-caption" style="font-size:13px;line-height:1.6;word-break:keep-all;"></div>
+      <div id="preview-hashtags" style="font-size:13px;color:#00376b;margin-top:4px;"></div>
+      <div style="font-size:12px;color:#737373;margin-top:6px;">2시간 전</div>
+    </div>
   </div>
 </div>
 
-<!-- 옵션 -->
-<div class="options-row">
-  <div class="opt-group">
-    <div class="opt-label">카드 수</div>
-    <select class="opt-select" id="cardCount">
-      <option value="3">3장</option>
-      <option value="4">4장</option>
-      <option value="5" selected>5장</option>
-      <option value="6">6장</option>
-    </select>
+<!-- 공유 모달 -->
+<div id="share-modal" class="modal-overlay" onclick="closeShareModal(event)">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-head">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="modal-head-label">🔗 팀 공유</div>
+          <div class="modal-head-title">카드뉴스 링크 공유</div>
+        </div>
+        <button type="button" class="btn ghost" style="padding:6px 10px;font-size:12px" onclick="closeShareModal()">닫기</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="share-status" style="font-size:13px;color:#737373;margin-bottom:16px;">링크를 생성하고 있어요...</div>
+      <div id="share-link-box" style="display:none;">
+        <div style="font-size:12px;font-weight:700;color:#737373;margin-bottom:6px;">공유 링크 (30일 유효)</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="share-link-input" type="text" readonly style="flex:1;font-size:12px;padding:10px 12px;border:1px solid #ebebeb;border-radius:8px;background:#f5f5f5;font-family:inherit;" />
+          <button type="button" class="btn" onclick="copyShareLink()" style="white-space:nowrap;">복사</button>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;color:#047857;">
+          ✓ 링크를 받은 팀원은 별도 로그인 없이 카드뉴스를 확인할 수 있어요.
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="opt-group">
-    <div class="opt-label">문구 톤</div>
-    <select class="opt-select" id="toneSelect">
-      <option value="감성적">감성적 · 시적</option>
-      <option value="따뜻한">따뜻한 · 다정한</option>
-      <option value="단호한">단호한 · 미니멀</option>
-      <option value="유머러스한">유머러스 · 가벼운</option>
-    </select>
-  </div>
 </div>
 
-<!-- 생성 버튼 -->
-<div class="generate-wrap">
-  <button class="btn-generate" id="genBtn" onclick="generateCards()">
-    ✦ 카드 만들기
-  </button>
-</div>
+<div id="loading" class="loading"><div class="spinner"></div><div id="loading-text">처리 중...</div></div>
+<div id="toast" class="toast"></div>
 
-<!-- 에러 -->
-<div class="error-box" id="errorBox">
-  <div class="error-inner" id="errorMsg"></div>
-</div>
-
-<!-- 로딩 -->
-<div class="loading" id="loading">
-  <div class="dot-wave">
-    <span></span><span></span><span></span>
-  </div>
-  <p id="loadingMsg">문구를 만들고 있어요...</p>
-</div>
-
-<!-- 카드 결과 -->
-<div class="cards-section" id="cardsSection">
-  <div class="cards-header">
-    <h2 id="resultTitle">리추얼 카드</h2>
-    <button class="btn-download-all" onclick="downloadAll()">전체 저장</button>
-  </div>
-  <div class="cards-grid" id="cardsGrid"></div>
-</div>
-
-<footer>✦ 나를 갖는 시간 ✦</footer>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-// ─── 팔레트 정의 ───
-const PALETTES = [
-  { name: 'peach',    bg: '#F7C5A8', text: '#3D2B1F', accent: '#E8896A', sub: '#7A5C4F' },
-  { name: 'blush',    bg: '#F2D4C8', text: '#3D2B1F', accent: '#C96A50', sub: '#7A5C4F' },
-  { name: 'butter',   bg: '#F5E6C8', text: '#3D2B1F', accent: '#C8903A', sub: '#7A5C4F' },
-  { name: 'sage',     bg: '#C8D8C0', text: '#2B3D28', accent: '#5A8050', sub: '#4A6040' },
-  { name: 'lavender', bg: '#D8CEEA', text: '#2B2040', accent: '#7A60B0', sub: '#5A4080' },
-  { name: 'cream',    bg: '#FDF6F0', text: '#3D2B1F', accent: '#E8896A', sub: '#B89B8E' },
-];
+const SUPABASE_URL = 'https://tbvuipqcmyoyowkbfbmo.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidnVpcHFjbXlveW93a2JmYm1vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NDcxMzIsImV4cCI6MjA5NzMyMzEzMn0.fhvWH6cjKEOaLupg7EDZ9ATX8g7ZBsOsLTvOEk3HuGU';
+const WORKER_API_BASE = 'https://wispy-mountain-4c30.yjuio9603.workers.dev';
+const SUGGEST_DEFAULT = ['뷰티','화장품','올리브영','장원영','무신사','패션','스타일','팝업','트렌드','서울'];
 
-const CHIP_COLORS = ['#F7C5A8','#F2D4C8','#F5E6C8','#C8D8C0','#D8CEEA','#FDF6F0'];
+var searchTags = [];
+var currentArticles = [];
+var selectedArticleIndex = -1;
+var cards = [];
+var cardImages = {};
+var cardStyles = {};
+var cardAlign = {};
+var generationSeq = 0;
 
-let cardData = []; // { text, subtitle, palette }
+var lastQuery = '';
+var lastSummary = { caption: '', hashtags: [] };
+var magSettings = {};
+var modalArticleIndex = -1;
+var activeMode = 'article';
 
-function toggleKey(inputId, btnId) {
-  const inp = document.getElementById(inputId);
-  const btn = document.getElementById(btnId);
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
-  else { inp.type = 'password'; btn.textContent = '👁'; }
+function $(id) { return document.getElementById(id); }
+
+function decodeHtml(v) {
+  var ta = document.createElement('textarea');
+  ta.innerHTML = String(v || '');
+  return ta.value;
 }
-
-function showError(msg) {
-  const box = document.getElementById('errorBox');
-  document.getElementById('errorMsg').textContent = msg;
-  box.style.display = 'block';
+function clean(v) {
+  return decodeHtml(String(v || '')).replace(/<[^>]+>/g, ' ').replace(/[""]/g, '"').replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
 }
-function hideError() { document.getElementById('errorBox').style.display = 'none'; }
-
-async function callGemini(prompt, apiKey) {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.9, maxOutputTokens: 1000 }
-    })
+function escapeHtml(v) {
+  return String(v || '').replace(/[&<>"']/g, function(s) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s];
   });
-  const data = await res.json();
-  if (!res.ok) {
-    const msg = data?.error?.message || '';
-    const isQuota = msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('rate') || res.status === 429;
-    throw { isQuota, message: msg || `Gemini 오류 (${res.status})` };
+}
+function clip(v, max) {
+  var s = clean(v);
+  return s.length > max ? s.slice(0, max - 1).replace(/\s+\S*$/, '') + '…' : s;
+}
+function showToast(msg) {
+  var t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2400);
+}
+function showLoading(msg) { $('loading-text').textContent = msg || '처리 중...'; $('loading').classList.add('show'); }
+function hideLoading() { $('loading').classList.remove('show'); }
+
+
+function switchMode(mode) {
+  activeMode = mode === 'topic' ? 'topic' : 'article';
+  $('tab-article').classList.toggle('active', activeMode === 'article');
+  $('tab-topic').classList.toggle('active', activeMode === 'topic');
+  $('article-panel').classList.toggle('active', activeMode === 'article');
+  $('topic-panel').classList.toggle('active', activeMode === 'topic');
+  if (activeMode === 'topic') $('results-panel').style.display = 'none';
+}
+
+function loadMagazineSettings() {
+  try {
+    var s = JSON.parse(localStorage.getItem('magazinie_settings') || '{}');
+    magSettings = s;
+    if (s.kwBeauty || s.kwFashion) {
+      var kws = ((s.kwBeauty || '') + ',' + (s.kwFashion || '')).split(',').map(function(k) { return k.trim(); }).filter(Boolean);
+      if (kws.length) searchTags = [kws[0]];
+    }
+    renderSearchChips();
+  } catch(e) {}
+}
+
+function renderSearchChips() {
+  $('search-chips').innerHTML = searchTags.map(function(t, i) {
+    return '<span class="chip">' + escapeHtml(t) + '<em class="chip-x" onclick="removeTag(' + i + ')">×</em></span>';
+  }).join('');
+  var used = {};
+  searchTags.forEach(function(t) { used[t] = true; });
+  $('search-suggest').innerHTML = SUGGEST_DEFAULT.filter(function(v) { return !used[v]; }).map(function(v) {
+    return '<button type="button" onclick="addTag(\'' + escapeHtml(v) + '\')">' + escapeHtml(v) + '</button>';
+  }).join('');
+}
+
+function addTag(value) {
+  var v = clean(value || $('search-input').value || '');
+  if (!v) { showToast('키워드를 입력해 주세요.'); return; }
+  if (!searchTags.includes(v)) searchTags.push(v);
+  $('search-input').value = '';
+  renderSearchChips();
+}
+
+function removeTag(i) {
+  searchTags.splice(i, 1);
+  renderSearchChips();
+}
+
+$('search-input') && ($('search-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); addTag(); }
+}));
+
+async function fetchWithTimeout(url, opt, timeout) {
+  if (!timeout) timeout = 30000;
+  var ctrl = new AbortController();
+  var timer = setTimeout(function() { ctrl.abort(); }, timeout);
+  try { return await fetch(url, Object.assign({}, opt, { signal: ctrl.signal })); }
+  finally { clearTimeout(timer); }
+}
+
+async function workerApiJson(path, options) {
+  if (!options) options = {};
+  var url = WORKER_API_BASE.replace(/\/$/, '') + path;
+  var res = await fetchWithTimeout(url, options, options.timeout || 30000);
+  var text = await res.text();
+  var data;
+  try { data = JSON.parse(text); } catch(e) { throw new Error('Worker 응답을 읽지 못했어요.'); }
+  if (!res.ok || data.ok === false) throw new Error(data.error || 'Worker 호출 실패');
+  return data;
+}
+
+async function checkWorkerHealth(toast) {
+  try {
+    var data = await workerApiJson('/health', { timeout: 9000 });
+    $('worker-version').textContent = data.version || 'connected';
+    if (toast) showToast('Worker 연결 확인 완료');
+  } catch(e) {
+    $('worker-version').textContent = '연결 확인 필요';
+    if (toast) showToast(e.message);
   }
-  let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  return raw.replace(/```json|```/g, '').trim();
 }
 
-async function callClaude(prompt, apiKey) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error?.message || `Claude 오류 (${res.status})`);
-  let raw = data?.content?.[0]?.text || '';
-  return raw.replace(/```json|```/g, '').trim();
+function normalizeArticle(a, i) {
+  return {
+    id: i, title: clean(a.title), desc: clean(a.desc || a.description),
+    url: a.url || a.link || '', origin: a.origin || a.originallink || a.url || a.link || '',
+    domain: a.domain || '', pubDate: a.pubDate || ''
+  };
 }
 
-async function generateCards() {
-  const geminiKey = document.getElementById('geminiKey').value.trim();
-  const claudeKey = document.getElementById('claudeKey').value.trim();
-  const topic = document.getElementById('topicInput').value.trim();
-  const count = parseInt(document.getElementById('cardCount').value);
-  const tone = document.getElementById('toneSelect').value;
 
-  if (!geminiKey && !claudeKey) { showError('API 키를 하나 이상 입력해주세요.'); return; }
-  if (!topic) { showError('주제를 입력해주세요.'); return; }
-  hideError();
+async function generateFromTopic() {
+  var topic = clean($('topic-input').value || '');
+  var tone = $('topic-tone').value || 'putput';
+  var count = Number($('topic-count').value || 5);
+  if (!topic) { showToast('주제를 입력해 주세요.'); return; }
 
-  document.getElementById('genBtn').disabled = true;
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('cardsSection').style.display = 'none';
-
-  const loadingMsgs = ['문구를 만들고 있어요...','감성을 다듬는 중...','거의 다 됐어요 ✦'];
-  let li = 0;
-  const lInterval = setInterval(() => {
-    li = (li + 1) % loadingMsgs.length;
-    document.getElementById('loadingMsg').textContent = loadingMsgs[li];
-  }, 1800);
-const prompt = `당신은 인스타그램 감성 카드뉴스 에디터입니다.
-
-사용자가 원하는 톤은 다음과 같습니다.
-- putput.letter 계정처럼 일상적이고 다정한 카드뉴스 톤
-- 과하게 시적이지 않게
-- 친구가 조용히 추천해주는 듯한 말투
-- 짧고 선명한 제목
-- 본문은 부드러운 권유형
-- 예: "좋아하는 카페에서 커피 한 잔", "늘 가던 곳 말고, 저장해뒀던 곳은 어떤가요?"
-- "~해보세요"보다 "~해보는 건 어때요?", "~만으로도 충분해요" 같은 문장 선호
-- 너무 광고 같거나 명령조로 쓰지 말 것
-
-주제: "${topic}"
-톤: ${tone}
-카드 수: ${count}장
-
-카드 구조:
-- 카드 1 표지:
-  title: 큰 제목, 24자 이내
-  subtitle: 짧은 부제, 24자 이내
-
-- 카드 2~끝 내용:
-  num: 번호
-  heading: 번호 뒤에 붙는 소제목, 18자 이내
-  line1: 짧은 본문 첫 줄, 26자 이내
-  line2: 짧은 본문 둘째 줄, 26자 이내
-  line3: 설명 첫 줄, 28자 이내
-  line4: 설명 둘째 줄, 28자 이내
-
-반드시 JSON 배열만 반환하세요. 다른 텍스트 없이 순수 JSON만:
-[
-  {"type":"cover","title":"제목","subtitle":"부제"},
-  {"type":"content","num":"1","heading":"소제목","line1":"본문 첫줄","line2":"본문 둘째줄","line3":"설명 첫줄","line4":"설명 둘째줄"}
-]`;
-
+  var token = ++generationSeq;
+  selectedArticleIndex = -1;
+  lastQuery = topic;
+  cards = []; cardImages = {}; cardStyles = {}; cardAlign = {}; lastSummary = { caption: '', hashtags: [] };
+  $('results-panel').style.display = 'none';
+  $('cards-panel').style.display = 'block';
+  setStatus('warn', '주제 기반 카드뉴스 생성 중: ' + clip(topic, 54));
+  showLoading('주제 카드뉴스 생성 중...');
 
   try {
-    let raw = null;
+    var data = null;
+    var fallbackReason = '';
 
-    if (geminiKey) {
+    try {
+      data = await workerApiJson('/generate-topic-cardnews', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ topic: topic, tone: tone, count: count }),
+        timeout: 60000
+      });
+    } catch(e1) {
+      fallbackReason = e1.message || '';
       try {
-        raw = await callGemini(prompt, geminiKey);
-      } catch (e) {
-        if (e.isQuota && claudeKey) {
-          document.getElementById('loadingMsg').textContent = 'Gemini 한도 초과 → Claude로 전환 중...';
-          raw = await callClaude(prompt, claudeKey);
-        } else if (e.isQuota && !claudeKey) {
-          throw new Error('Gemini 한도 초과. Claude API 키도 입력해주세요.');
-        } else {
-          throw new Error(e.message);
-        }
+        data = await workerApiJson('/generate-cardnews', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ mode: 'topic', topic: topic, tone: tone, count: count }),
+          timeout: 60000
+        });
+      } catch(e2) {
+        data = makeLocalTopicCards(topic, tone, count);
+        data.sourceInfo = { status: '주제 생성 API 연결 전이라 기본 템플릿 문구로 생성했어요. Worker에 /generate-topic-cardnews를 추가하면 AI 문구로 바뀝니다. ' + fallbackReason };
       }
-    } else {
-      raw = await callClaude(prompt, claudeKey);
     }
 
-    const parsed = JSON.parse(raw);
-    cardData = parsed.map((item, i) => ({
-      ...item,
-      paletteIdx: i % PALETTES.length
-    }));
-    renderCards(topic);
-  } catch (e) {
-    showError('오류: ' + (e.message || e));
+    if (token !== generationSeq) return;
+    cards = normalizeTopicCards(data.cards || [], topic, count);
+    lastSummary = data.summary || makeTopicSummary(topic, tone);
+    cardImages = {}; cardStyles = {}; cardAlign = {};
+    renderCards();
+    setStatus(data.sourceInfo && data.sourceInfo.status && data.sourceInfo.status.includes('기본 템플릿') ? 'warn' : 'ok', clean((data.sourceInfo && data.sourceInfo.status) || '주제 기반 카드뉴스 생성 완료'));
+    setTimeout(function() { $('cards-panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+    showToast('카드뉴스 ' + cards.length + '컷을 생성했어요.');
+  } catch(e) {
+    setStatus('warn', e.message || '주제 카드뉴스 생성 실패');
+    showToast(e.message || '주제 카드뉴스 생성 실패');
   } finally {
-    clearInterval(lInterval);
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('genBtn').disabled = false;
+    hideLoading();
   }
 }
 
-function renderCards(topic) {
-  const grid = document.getElementById('cardsGrid');
-  grid.innerHTML = '';
-  document.getElementById('resultTitle').textContent = `"${topic}" 리추얼 카드`;
-  document.getElementById('cardsSection').style.display = 'block';
+function normalizeTopicCards(rawCards, topic, count) {
+  var arr = Array.isArray(rawCards) ? rawCards : [];
+  var total = Math.max(3, Math.min(7, Number(count || 5)));
+  var bodyCount = Math.max(1, total - 2);
+  var cover = arr.find(function(c) { return c && (c.type === 'hook' || c.type === 'cover'); }) || arr[0] || {};
+  var cta = arr.find(function(c) { return c && c.type === 'cta'; }) || arr[arr.length - 1] || {};
+  var bodies = arr.filter(function(c) { return c && !(c.type === 'hook' || c.type === 'cover' || c.type === 'cta'); }).slice(0, bodyCount);
+  var local = makeLocalTopicCards(topic, 'putput', total).cards;
 
-  cardData.forEach((card, idx) => {
-    const item = document.createElement('div');
-    item.className = 'card-item';
+  var result = [{
+    label: 'COVER', role: 'COVER', type: 'hook',
+    title: clean(cover.title || local[0].title),
+    subtitle: clean(cover.subtitle || local[0].subtitle || ''),
+    body: '', magName: magSettings.magName || 'MAGAZINIE'
+  }];
 
-    const canvasWrap = document.createElement('div');
-    canvasWrap.className = 'card-canvas-wrap';
-
-    const canvas = document.createElement('canvas');
-    canvas.className = 'card-canvas';
-    canvas.width = 1080;
-    canvas.height = 1080;
-    canvas.dataset.idx = idx;
-
-    canvasWrap.appendChild(canvas);
-
-    const controls = document.createElement('div');
-    controls.className = 'card-controls';
-
-    const num = document.createElement('div');
-    num.className = 'card-num';
-    num.textContent = `CARD ${String(idx + 1).padStart(2, '0')}`;
-
-    const chips = document.createElement('div');
-    chips.className = 'color-chips';
-    CHIP_COLORS.forEach((color, ci) => {
-      const chip = document.createElement('div');
-      chip.className = 'color-chip' + (ci === card.paletteIdx ? ' active' : '');
-      chip.style.background = color;
-      chip.title = PALETTES[ci].name;
-      chip.onclick = () => {
-        cardData[idx].paletteIdx = ci;
-        chips.querySelectorAll('.color-chip').forEach((c, i) => c.classList.toggle('active', i === ci));
-        drawCard(canvas, cardData[idx], idx + 1, cardData.length);
-      };
-      chips.appendChild(chip);
-    });
-function createEditBox(card, idx, canvas) {
-  const box = document.createElement('div');
-  box.className = 'edit-box';
-
-  const fields = card.type === 'cover'
-    ? [
-        ['title', '제목'],
-        ['subtitle', '부제']
-      ]
-    : [
-        ['heading', '소제목'],
-        ['line1', '본문 1'],
-        ['line2', '본문 2'],
-        ['line3', '설명 1'],
-        ['line4', '설명 2']
-      ];
-
-  fields.forEach(([key, label]) => {
-    const wrap = document.createElement('div');
-    wrap.className = 'edit-field';
-
-    const lab = document.createElement('label');
-    lab.textContent = label;
-
-    const input = document.createElement('textarea');
-    input.rows = 1;
-    input.value = card[key] || '';
-
-    input.addEventListener('input', () => {
-      cardData[idx][key] = input.value;
-      drawCard(canvas, cardData[idx], idx + 1, cardData.length);
-    });
-
-    wrap.appendChild(lab);
-    wrap.appendChild(input);
-    box.appendChild(wrap);
-  });
-
-  return box;
-}
-    const dlBtn = document.createElement('button');
-    dlBtn.className = 'btn-dl';
-    dlBtn.textContent = '저장';
-    dlBtn.onclick = () => downloadCard(canvas, idx + 1);
-
-    controls.appendChild(num);
-    controls.appendChild(chips);
-    controls.appendChild(dlBtn);
-const editBox = createEditBox(card, idx, canvas);
-
-item.appendChild(canvasWrap);
-item.appendChild(editBox);
-item.appendChild(controls);
-grid.appendChild(item);
-
-drawCard(canvas, card, idx + 1, cardData.length);
-
-  });
-}
-
-function drawCard(canvas, card, num, total) {
-  const ctx = canvas.getContext('2d');
-  const W = 1080, H = 1080;
-  const pal = PALETTES[card.paletteIdx];
-  const M = 80; // margin
-
-  ctx.clearRect(0, 0, W, H);
-
-  // 배경
-  ctx.fillStyle = pal.bg;
-  ctx.fillRect(0, 0, W, H);
-
-  // 그라디언트 오버레이
-  const grad = ctx.createRadialGradient(W*0.3, H*0.25, 0, W*0.5, H*0.5, W*0.8);
-  grad.addColorStop(0, 'rgba(255,255,255,0.15)');
-  grad.addColorStop(1, 'rgba(0,0,0,0.04)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
-
-  // 상단 장식선
-  ctx.strokeStyle = pal.accent;
-  ctx.lineWidth = 2;
-  ctx.globalAlpha = 0.35;
-  ctx.beginPath(); ctx.moveTo(M, M); ctx.lineTo(W-M, M); ctx.stroke();
-  ctx.globalAlpha = 1;
-  drawDiamond(ctx, W/2, M, 7, pal.accent, 0.6);
-
-  // 하단 장식선
-  ctx.strokeStyle = pal.accent;
-  ctx.lineWidth = 2;
-  ctx.globalAlpha = 0.35;
-  ctx.beginPath(); ctx.moveTo(M, H-M); ctx.lineTo(W-M, H-M); ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  // 카드 번호 (우상단)
-  ctx.font = '400 24px "NanumSquareNeo", sans-serif';
-  ctx.fillStyle = pal.sub;
-  ctx.globalAlpha = 0.45;
-  ctx.textAlign = 'right';
-  ctx.fillText(`${num} / ${total}`, W-M, M-16);
-  ctx.globalAlpha = 1;
-
-  if (card.type === 'cover') {
-    // ── 표지 카드 ──
-    // 큰 제목
-    ctx.font = '800 88px "NanumSquareNeo", sans-serif';
-    ctx.fillStyle = pal.text;
-    ctx.textAlign = 'center';
-    wrapText(ctx, card.title, W/2, H/2 - 60, W - M*2.5, 100);
-
-    // 구분선
-    ctx.strokeStyle = pal.accent;
-    ctx.lineWidth = 2;
-    ctx.globalAlpha = 0.5;
-    ctx.beginPath(); ctx.moveTo(W/2-80, H/2+80); ctx.lineTo(W/2+80, H/2+80); ctx.stroke();
-    ctx.globalAlpha = 1;
-
-    // 부제
-    ctx.font = '400 42px "NanumSquareNeo", sans-serif';
-    ctx.fillStyle = pal.sub;
-    ctx.globalAlpha = 0.8;
-    ctx.textAlign = 'center';
-    wrapText(ctx, card.subtitle, W/2, H/2 + 150, W - M*3, 54);
-    ctx.globalAlpha = 1;
-
-  } else {
-    // ── 내용 카드 ──
-    const LX = M + 20; // 좌측 텍스트 시작 x
-    const TW = W - M*2 - 40; // 텍스트 폭
-
-    // 번호 + 소제목 영역 (상단 1/3)
-    const headY = 200;
-
-    // 번호 (작게)
-    ctx.font = '800 32px "NanumSquareNeo", sans-serif';
-    ctx.fillStyle = pal.accent;
-    ctx.textAlign = 'left';
-    ctx.fillText(card.num + '.', LX, headY);
-
-    // 소제목 (굵게 크게)
-    ctx.font = '800 66px "NanumSquareNeo", sans-serif';
-    ctx.fillStyle = pal.text;
-    ctx.textAlign = 'left';
-    wrapTextLeft(ctx, card.heading, LX, headY + 72, TW, 78);
-
-    // 구분선
-    ctx.strokeStyle = pal.accent;
-    ctx.lineWidth = 2;
-    ctx.globalAlpha = 0.4;
-    ctx.beginPath(); ctx.moveTo(LX, 420); ctx.lineTo(LX + 120, 420); ctx.stroke();
-    ctx.globalAlpha = 1;
-
-    // 본문 2줄 (중간, 보통 굵기)
-    ctx.font = '500 40px "NanumSquareNeo", sans-serif';
-    ctx.fillStyle = pal.text;
-    ctx.globalAlpha = 0.9;
-    ctx.textAlign = 'left';
-    ctx.fillText(card.line1 || '', LX, 500);
-    ctx.fillText(card.line2 || '', LX, 556);
-    ctx.globalAlpha = 1;
-
-    // 설명 2줄 (하단, 연한 색)
-    ctx.font = '400 36px "NanumSquareNeo", sans-serif';
-    ctx.fillStyle = pal.sub;
-    ctx.globalAlpha = 0.75;
-    ctx.textAlign = 'left';
-    ctx.fillText(card.line3 || '', LX, 660);
-    ctx.fillText(card.line4 || '', LX, 710);
-    ctx.globalAlpha = 1;
+  for (var i = 0; i < bodyCount; i++) {
+    var b = bodies[i] || local[i + 1] || {};
+    var title = clean(b.title || b.heading || ((i + 1) + '. 작은 제안'));
+    var body = clean(b.body || [b.line1, b.line2, b.line3, b.line4].filter(Boolean).join('\n') || '오늘의 나에게 맞는 방식으로 가볍게 시도해보는 건 어때요?');
+    result.push({ label: 'CARD ' + String(i + 1).padStart(2, '0'), role: title, title: title, body: body, type: 'body' });
   }
 
-  // 하단 브랜드
-  ctx.font = '300 22px "NanumSquareNeo", sans-serif';
-  ctx.fillStyle = pal.sub;
-  ctx.globalAlpha = 0.4;
-  ctx.textAlign = 'center';
-  ctx.fillText('✦ 나를 갖는 시간 ✦', W/2, H-M+20);
-  ctx.globalAlpha = 1;
+  result.push({
+    label: 'CTA', role: 'CTA', type: 'cta',
+    title: clean(cta.title || local[local.length - 1].title),
+    body: clean(cta.body || local[local.length - 1].body)
+  });
+  return result;
 }
 
-function wrapTextLeft(ctx, text, x, y, maxWidth, lineHeight) {
-  if (!text) return;
-  let line = '';
-  let currentY = y;
-  for (let i = 0; i < text.length; i++) {
-    const testLine = line + text[i];
-    if (ctx.measureText(testLine).width > maxWidth && line) {
-      ctx.fillText(line, x, currentY);
-      line = text[i];
-      currentY += lineHeight;
+function makeLocalTopicCards(topic, tone, count) {
+  var total = Math.max(3, Math.min(7, Number(count || 5)));
+  var bodyCount = Math.max(1, total - 2);
+  var ideas = [
+    { title: '1. 가볍게 시작하기', body: '처음부터 완벽하지 않아도 괜찮아요.\n오늘은 가장 쉬운 한 가지부터\n작게 시작해보는 건 어때요?' },
+    { title: '2. 내 취향을 기준으로', body: '남들이 좋다는 방식보다\n지금 내 마음에 더 맞는 쪽을\n천천히 골라봐도 좋아요.' },
+    { title: '3. 분위기를 바꿔보기', body: '늘 하던 순서를 조금만 바꿔도\n하루의 결이 달라질 수 있어요.\n작은 변화면 충분해요.' },
+    { title: '4. 기록으로 남기기', body: '좋았던 순간은 금방 지나가니까\n한 줄이라도 적어두면 좋아요.\n나중의 나에게 작은 힌트가 돼요.' },
+    { title: '5. 무리하지 않기', body: '잘해야 한다는 마음은 잠깐 내려두고\n오늘 가능한 만큼만 해도 괜찮아요.\n그 정도면 충분해요.' }
+  ];
+  var cards = [{ type: 'hook', title: topic + '\n작게 시작하기', subtitle: '오늘의 나에게 건네는 다정한 제안' }];
+  for (var i = 0; i < bodyCount; i++) cards.push(Object.assign({ type: 'body' }, ideas[i % ideas.length]));
+  cards.push({ type: 'cta', title: '오늘 하나만 골라봐요', body: topic + '\n가장 끌리는 것부터 가볍게 시작해요.' });
+  return { cards: cards, summary: makeTopicSummary(topic, tone) };
+}
+
+function makeTopicSummary(topic, tone) {
+  return {
+    caption: topic + '\n\n오늘의 나에게 맞는 방식으로 한 장씩 넘겨보세요.',
+    hashtags: ['#카드뉴스', '#인스타카드뉴스', '#오늘의주제', '#라이프스타일']
+  };
+}
+
+async function searchNews() {
+  var input = $('search-input').value.trim();
+  if (input) addTag(input);
+  var q = searchTags.length ? searchTags.join(' ') : '';
+  if (!q) { showToast('키워드를 입력해 주세요.'); return; }
+  lastQuery = q;
+  $('manual-text').value = '';
+  cards = []; cardImages = {}; cardStyles = {}; cardAlign = {}; lastSummary = { caption: '', hashtags: [] };
+  $('cards-panel').style.display = 'none';
+  showLoading('"' + q + '" 뉴스 검색 중...');
+  try {
+    var data = await workerApiJson('/search-news?q=' + encodeURIComponent(q) + '&type=general', { timeout: 30000 });
+    currentArticles = (data.articles || data.items || []).map(function(a, i) { return normalizeArticle(a, i); });
+    selectedArticleIndex = -1;
+    renderArticles();
+    $('results-panel').style.display = 'block';
+    $('result-count').textContent = currentArticles.length;
+    $('result-source').textContent = data.source || 'Cloudflare Worker + Naver API';
+    showToast('뉴스 ' + currentArticles.length + '건을 불러왔어요.');
+  } catch(e) {
+    showToast(e.message || '검색 실패');
+  } finally {
+    hideLoading();
+  }
+}
+
+function renderArticles() {
+  var list = $('article-list');
+  list.innerHTML = '';
+  currentArticles.forEach(function(a, i) {
+    var date = '최근';
+    if (a.pubDate) {
+      try { date = new Date(a.pubDate).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch(e) {}
+    }
+    var div = document.createElement('div');
+    div.className = 'article' + (selectedArticleIndex === i ? ' selected' : '');
+    div.innerHTML = '<div class="thumb">📰</div>'
+      + '<div class="article-info">'
+      + '<div class="article-title">' + escapeHtml(a.title) + '</div>'
+      + '<div class="article-sub">' + escapeHtml(date) + ' · ' + escapeHtml(a.domain || '') + '</div>'
+      + '<div class="article-desc">' + escapeHtml(a.desc || '기사 설명 없음') + '</div>'
+      + '</div>'
+      + '<button type="button" class="btn">본문 보기</button>';
+    div.addEventListener('click', function() { openArticleModal(i); });
+    div.querySelector('button').addEventListener('click', function(e) { e.stopPropagation(); openArticleModal(i); });
+    list.appendChild(div);
+  });
+}
+
+function getManualTextForArticle(article) {
+  var t = $('manual-text').value.trim();
+  if (t.length < 80) return '';
+  return '[선택기사본문]' + t;
+}
+
+function styleOf(i) {
+  if (!cardStyles[i]) cardStyles[i] = { bg: i === 0 ? '#101010' : '#080808', title: '#ffffff', body: '#ffffff', accent: i === 0 ? '#ff9ec7' : '#ff9ec7', size: 18 };
+  // 팔레트 적용
+  var palette = magSettings.palette || 'peach';
+  var accentMap = { peach: '#f6bcba', lavender: '#a78bfa', mint: '#34d399', sky: '#38bdf8', sand: '#fbbf24', rose: '#fb7185', noir: '#9ca3af', cream: '#fef08a' };
+  if (!cardStyles[i]._paletteSet) {
+    cardStyles[i].accent = accentMap[palette] || '#f6bcba';
+    cardStyles[i]._paletteSet = true;
+  }
+  return cardStyles[i];
+}
+function alignOf(i) { if (!cardAlign[i]) cardAlign[i] = 'center'; return cardAlign[i]; }
+function setAlign(i, align) { cardAlign[i] = align; rerenderCard(i); }
+
+async function generateFromArticle(index) {
+  var article = currentArticles[index];
+  if (!article) { showToast('기사 정보를 찾지 못했어요.'); return; }
+  var token = ++generationSeq;
+  selectedArticleIndex = index;
+  renderArticles();
+  $('cards-panel').style.display = 'block';
+  setStatus('warn', '선택 기사 고정: ' + clip(article.title, 54) + ' · 본문 혼선 차단 중...');
+  showLoading('본문 수집 + AI 요약 중...');
+  try {
+    var manualText = getManualTextForArticle(article);
+    var data = await workerApiJson('/generate-cardnews', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ article: article, query: lastQuery, manualText: manualText }),
+      timeout: 60000
+    });
+    if (token !== generationSeq) return;
+    cards = normalizeCards(data.cards || [], article);
+    lastSummary = data.summary || {};
+    cardImages = {}; cardStyles = {}; cardAlign = {};
+    renderCards();
+    var info = data.sourceInfo || {};
+    setStatus(info.usedFullBody || info.usedManual ? 'ok' : 'warn', clean(info.status || 'AI 카드뉴스 생성 완료'));
+    setTimeout(function() { $('cards-panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+    showToast('AI 카드뉴스 ' + cards.length + '컷을 생성했어요.');
+  } catch(e) {
+    setStatus('warn', e.message || '카드뉴스 생성 실패');
+    showToast(e.message || '카드뉴스 생성 실패');
+  } finally {
+    hideLoading();
+  }
+}
+
+function setStatus(type, msg) {
+  var el = $('source-status');
+  el.className = 'source-status ' + (type === 'ok' ? 'ok' : 'warn');
+  el.textContent = msg;
+}
+
+function normalizeCards(rawCards, article) {
+  var arr = Array.isArray(rawCards) ? rawCards : [];
+  var findRole = function(role) { return arr.find(function(c) { return String(c && c.role || '').toUpperCase() === role; }) || null; };
+  var hook = arr.find(function(c) { return c && c.type === 'hook'; }) || arr[0] || {};
+  var cta = arr.find(function(c) { return c && c.type === 'cta'; }) || arr[4] || {};
+  var roles = ['NOW TRENDING', 'CONTEXT', 'THE TAKEAWAY', "WHAT'S NEXT", 'WHY IT MATTERS'];
+  var magName = magSettings.magName || '와디즈 매거진';
+  return [
+    { label: 'HOOK', role: 'HOOK', title: clean(hook.title || ''), body: '', subtitle: clean(hook.subtitle || ''), type: 'hook', magName: magName },
+    roles.map(function(role, idx) {
+      var c = findRole(role) || arr[idx + 1] || {};
+      return { label: 'BODY ' + (idx + 1), role: role, title: role, body: clean(c.body || ''), type: 'body' };
+    }),
+    { label: 'CTA', role: 'CTA', title: clean(cta.title || (magSettings.ctaHeadline || '"이거 왜 난리예요?"')), body: (magSettings.ctaCopy1 || '복잡한 이슈, 핵심만 쉽게') + '\n' + (magSettings.ctaCopy2 || '한 장씩 넘기면 정리 끝'), type: 'cta' }
+  ].flat();
+}
+
+function renderCards() {
+  var row = $('card-row'), edit = $('edit-row');
+  row.innerHTML = ''; edit.innerHTML = '';
+  cards.forEach(function(c, i) {
+    row.appendChild(renderCardCol(c, i));
+    edit.appendChild(renderEdit(c, i));
+  });
+  renderCaption();
+}
+
+function renderCardCol(c, i) {
+  var col = document.createElement('div');
+  col.className = 'card-col';
+  col.innerHTML = '<div class="card-label">' + escapeHtml(c.label) + '</div>'
+    + '<div id="card-' + i + '" class="card-wrap">' + cardHtml(c, i) + '</div>'
+    + '<div class="align-row"><button type="button" onclick="setAlign(' + i + ',\'left\')">◀</button>'
+    + '<button type="button" onclick="setAlign(' + i + ',\'right\')">▶</button></div>'
+    + '<input type="file" id="img-' + i + '" accept="image/*" style="display:none" onchange="setImage(' + i + ',this)">'
+    + '<button type="button" class="img-btn" onclick="document.getElementById(\'img-' + i + '\').click()">'
+    + (i === 0 ? '이미지 변경' : '이미지 변경') + '</button>';
+  return col;
+}
+
+function defaultBg(i) {
+  return '<div style="position:absolute;inset:0;background:' + (i === 0 ? 'linear-gradient(180deg,#191919,#050505)' : 'linear-gradient(180deg,#101010,#030303)') + '"></div>';
+}
+
+function renderHookTitle(title, main, accent) {
+  var parts = String(title || '').split('\n');
+  var a = parts[0] || '', b = parts[1] || '';
+  return '<span style="color:' + main + '">' + escapeHtml(a) + '</span>' + (b ? '<br><span style="color:' + accent + '">' + escapeHtml(b) + '</span>' : '');
+}
+
+function cardHtml(c, i) {
+  var st = styleOf(i), img = cardImages[i], align = alignOf(i);
+  var justify = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+  var textAlign = align === 'center' ? 'left' : align;
+  var magName = magSettings.magName || 'MAGAZINIE';
+  var magHandle = magSettings.magHandle || 'magazinie';
+
+  if (c.type === 'hook') {
+    return '<div class="card-inner" style="background:' + st.bg + ';">'
+      + (img ? '<img src="' + img + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">' : defaultBg(i))
+      + '<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.82) 55%,rgba(0,0,0,.08))"></div>'
+      + '<div style="position:absolute;left:18px;right:18px;bottom:22px;text-align:' + textAlign + '">'
+      + '<div style="font-size:8px;color:rgba(255,255,255,.55);font-weight:900;letter-spacing:.12em;margin-bottom:8px">' + escapeHtml(magName.toUpperCase()) + '</div>'
+      + '<div style="font-size:' + st.size + 'px;line-height:1.25;font-weight:950;letter-spacing:-.04em;word-break:keep-all">' + renderHookTitle(c.title, st.title, st.accent) + '</div>'
+      + '</div></div>';
+  }
+
+  if (c.type === 'cta') {
+    return '<div class="card-inner" style="background:' + st.bg + ';padding:22px;color:#fff;display:flex;flex-direction:column">'
+      + (img ? '<img src="' + img + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.25">' : '')
+      + '<div style="position:relative;z-index:2;font-size:10px;color:#999;font-weight:800;margin-bottom:14px">' + escapeHtml(magName.toUpperCase()) + '</div>'
+      + '<div style="position:relative;z-index:2;font-size:17px;font-weight:950;margin-bottom:14px;white-space:pre-line;color:' + st.title + '">' + escapeHtml(c.title || '') + '</div>'
+      + '<div style="position:relative;z-index:2;font-size:12px;color:#777;line-height:1.6;white-space:pre-line">' + escapeHtml(c.body || '') + '</div>'
+      + '<div style="position:relative;z-index:2;margin-top:auto;font-size:12px;font-weight:900;color:#555">' + escapeHtml(magHandle) + '</div>'
+      + '</div>';
+  }
+
+  return '<div class="card-inner" style="background:' + st.bg + ';">'
+    + (img ? '<img src="' + img + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.22">' : defaultBg(i))
+    + '<div style="position:absolute;inset:0;padding:20px;display:flex;flex-direction:column;justify-content:flex-end;text-align:' + textAlign + '">'
+    + '<div style="font-size:' + Math.max(10, st.size - 7) + 'px;line-height:1.35;font-weight:950;color:' + st.accent + ';white-space:pre-line;word-break:keep-all;letter-spacing:-.02em;margin-bottom:10px">' + escapeHtml(c.title || '') + '</div>'
+    + '<div style="font-size:' + Math.max(11, st.size - 6) + 'px;line-height:1.64;font-weight:850;color:' + st.body + ';white-space:pre-line;word-break:keep-all;letter-spacing:-.02em">' + escapeHtml(c.body || '') + '</div>'
+    + '</div></div>';
+}
+
+function renderEdit(c, i) {
+  var st = styleOf(i);
+  var div = document.createElement('div');
+  div.className = 'edit-panel';
+  div.innerHTML = '<div class="edit-label">제목 수정</div>'
+    + '<textarea id="title-' + i + '" class="title-input">' + escapeHtml(c.title || '') + '</textarea>'
+    + (c.type === 'body' ? '<div class="edit-label">본문 수정</div><textarea id="body-' + i + '" class="body-input">' + escapeHtml(c.body || '') + '</textarea>' : '')
+    + '<div class="color-grid">'
+    + '<label class="color-item">배경 <input type="color" value="' + st.bg + '" onchange="setStyle(' + i + ',\'bg\',this.value)"></label>'
+    + '<label class="color-item">제목 <input type="color" value="' + st.title + '" onchange="setStyle(' + i + ',\'title\',this.value)"></label>'
+    + '<label class="color-item">강조 <input type="color" value="' + st.accent + '" onchange="setStyle(' + i + ',\'accent\',this.value)"></label>'
+    + '<label class="color-item">본문 <input type="color" value="' + st.body + '" onchange="setStyle(' + i + ',\'body\',this.value)"></label>'
+    + '</div>'
+    + '<div class="size-row">크기 <input type="range" min="12" max="28" value="' + st.size + '" oninput="setStyle(' + i + ',\'size\',this.value)"></div>'
+    + '<button type="button" class="btn apply" onclick="applyText(' + i + ')">텍스트 적용</button>';
+  return div;
+}
+
+function setStyle(i, k, v) { styleOf(i)[k] = k === 'size' ? Number(v) : v; rerenderCard(i); }
+function rerenderCard(i) { var el = $('card-' + i); if (el) el.innerHTML = cardHtml(cards[i], i); renderCaption(); }
+function applyText(i) {
+  cards[i].title = $('title-' + i).value;
+  if ($('body-' + i)) cards[i].body = $('body-' + i).value;
+  rerenderCard(i); renderCaption();
+  showToast('텍스트를 적용했어요.');
+}
+function setImage(i, input) {
+  var f = input.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) { cardImages[i] = e.target.result; rerenderCard(i); };
+  r.readAsDataURL(f);
+}
+
+function renderCaption() {
+  if (!cards.length) { $('caption-box').innerHTML = ''; $('hashtag-box').textContent = ''; return; }
+  var lines = [];
+  lines.push('⭐ ' + clean(cards[0] && cards[0].title || ''));
+  cards.slice(1, 4).forEach(function(c) { lines.push('📍 ' + clean((c.role ? c.role + ' — ' : '') + (c.body || ''))); });
+  $('caption-box').innerHTML = lines.map(function(x) { return '<div class="caption-line">' + escapeHtml(x) + '</div>'; }).join('');
+  $('hashtag-box').textContent = Array.isArray(lastSummary.hashtags) && lastSummary.hashtags.length
+    ? lastSummary.hashtags.map(clean).join(' ')
+    : '#카드뉴스 #트렌드 #매거진';
+}
+
+function copyCaption() {
+  var text = Array.from(document.querySelectorAll('.caption-line')).map(function(x) { return x.textContent; }).join('\n')
+    + '\n\n' + $('hashtag-box').textContent;
+  navigator.clipboard.writeText(text).then(function() { showToast('캡션을 복사했어요.'); });
+}
+
+async function downloadAll() {
+  if (!cards.length) { showToast('먼저 카드를 생성해 주세요.'); return; }
+  showLoading('이미지 생성 중...');
+  try {
+    var zip = new JSZip();
+    for (var i = 0; i < cards.length; i++) {
+      var canvas = await html2canvas($('card-' + i), { scale: 3, useCORS: true, allowTaint: true, backgroundColor: null });
+      var blob = await new Promise(function(r) { canvas.toBlob(r, 'image/png'); });
+      zip.file('card_' + String(i + 1).padStart(2, '0') + '_' + cards[i].label + '.png', blob);
+    }
+    zip.file('caption.txt', Array.from(document.querySelectorAll('.caption-line')).map(function(x) { return x.textContent; }).join('\n') + '\n\n' + $('hashtag-box').textContent);
+    var data = await zip.generateAsync({ type: 'blob' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(data);
+    a.download = 'magazinie-cardnews.zip';
+    a.click();
+    showToast('ZIP 다운로드 완료');
+  } catch(e) {
+    showToast('다운로드 실패');
+  }
+  hideLoading();
+}
+
+function init() {
+  loadMagazineSettings();
+  renderSearchChips();
+  checkWorkerHealth(false);
+  loadSharedCards();
+}
+
+
+async function openArticleModal(index) {
+  var article = currentArticles[index];
+  if (!article) return;
+  modalArticleIndex = index;
+
+  // 모달 열기
+  var modal = $('article-modal');
+  $('modal-title').textContent = article.title;
+  $('modal-meta').textContent = (article.pubDate ? new Date(article.pubDate).toLocaleDateString('ko-KR') + ' · ' : '') + (article.domain || '');
+  $('modal-body-text').innerHTML = '<div class="modal-body-empty">본문 불러오는 중...</div>';
+  // 원문 링크 설정
+  var originLink = $('modal-origin-link');
+  if (originLink) {
+    originLink.href = article.origin || article.url || '#';
+  }
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  // 본문 fetch
+  try {
+    var res = await fetchWithTimeout(WORKER_API_BASE + '/fetch-article', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url: article.url, origin: article.origin, title: article.title, desc: article.desc })
+    }, 20000);
+    var data = await res.json();
+    if (data.ok && data.body) {
+      // 노이즈 제거 + 단락 구분
+      var cleaned = data.body
+        .replace(/var\s+\w+\s*=\s*[^;]{0,80};/g, ' ')
+        .replace(/ⓒ\s*\S+/g, '')
+        .replace(/\[사진[^\]]*\]/g, '')
+        .replace(/\[이미지[^\]]*\]/g, '')
+        .replace(/사진\s*=\s*[^\s]+/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      $('modal-body-text').textContent = cleaned;
     } else {
-      line = testLine;
+      $('modal-body-text').innerHTML = '<div class="modal-body-empty">본문을 불러오지 못했어요.<br>기사 원문을 직접 확인해주세요.</div>';
     }
+  } catch(e) {
+    $('modal-body-text').innerHTML = '<div class="modal-body-empty">본문 로딩 실패: ' + e.message + '</div>';
   }
-  if (line) ctx.fillText(line, x, currentY);
 }
 
-function drawDiamond(ctx, x, y, size, color, alpha) {
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(x, y - size);
-  ctx.lineTo(x + size, y);
-  ctx.lineTo(x, y + size);
-  ctx.lineTo(x - size, y);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
+function closeArticleModal(e) {
+  if (e && e.target !== $('article-modal')) return;
+  $('article-modal').classList.remove('show');
+  document.body.style.overflow = '';
 }
 
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  if (!text) return;
-  const words = text.split('');
-  let line = '';
-  let lines = [];
+function generateFromModal() {
+  $('article-modal').classList.remove('show');
+  document.body.style.overflow = '';
+  generateFromArticle(modalArticleIndex);
+}
 
-  // 한국어는 글자 단위로, 공백 있으면 단어 단위로
-  if (text.includes(' ')) {
-    const wordArr = text.split(' ');
-    for (let i = 0; i < wordArr.length; i++) {
-      const testLine = line + (line ? ' ' : '') + wordArr[i];
-      if (ctx.measureText(testLine).width > maxWidth && line) {
-        lines.push(line);
-        line = wordArr[i];
-      } else {
-        line = testLine;
-      }
-    }
-    if (line) lines.push(line);
+
+// ── 인스타 미리보기 ──────────────────────────────
+function openPreview() {
+  if (!cards.length) { showToast('먼저 카드를 생성해 주세요.'); return; }
+  previewIndex = 0;
+
+  var modal = document.getElementById('preview-modal');
+  var imgBox = document.getElementById('preview-card-img');
+  var dots = document.getElementById('preview-dots');
+
+  imgBox.innerHTML = '';
+  dots.innerHTML = '';
+
+  // 프로필
+  var handle = (magSettings.magHandle || 'hypokeimenon').replace('@','');
+  document.getElementById('preview-profile-name').textContent = handle;
+  document.getElementById('preview-profile-initial').textContent = handle.charAt(0).toUpperCase();
+
+  // 닷 생성
+  for (var di = 0; di < cards.length; di++) {
+    var dot = document.createElement('div');
+    dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.4);transition:.2s;flex-shrink:0;';
+    dots.appendChild(dot);
+  }
+
+  // 캡션
+  document.getElementById('preview-caption').textContent = lastSummary.caption || '';
+  document.getElementById('preview-hashtags').textContent = Array.isArray(lastSummary.hashtags) ? lastSummary.hashtags.join(' ') : '';
+
+  // 모달 표시
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  // 버튼 이벤트
+  document.getElementById('preview-close-btn').onclick = function() { closePreviewModal(); };
+  document.getElementById('preview-prev-btn').onclick = function() { if (previewIndex > 0) renderPreviewCard(previewIndex - 1); };
+  document.getElementById('preview-next-btn').onclick = function() { if (previewIndex < cards.length - 1) renderPreviewCard(previewIndex + 1); };
+
+  // 바로 첫 카드 렌더링 (DOM 복제 방식)
+  renderPreviewCard(0);
+}
+
+function renderPreviewCard(idx) {
+  if (idx < 0 || idx >= cards.length) return;
+  previewIndex = idx;
+  var imgBox = document.getElementById('preview-card-img');
+  imgBox.innerHTML = '';
+
+  // 원본 카드 복제
+  var original = document.getElementById('card-' + idx);
+  if (original) {
+    var clone = original.cloneNode(true);
+    clone.removeAttribute('id');
+    clone.style.cssText = 'width:100%;height:100%;border-radius:0;position:relative;';
+    imgBox.appendChild(clone);
   } else {
-    // 한국어 글자 단위
-    for (let i = 0; i < words.length; i++) {
-      const testLine = line + words[i];
-      if (ctx.measureText(testLine).width > maxWidth && line) {
-        lines.push(line);
-        line = words[i];
-      } else {
-        line = testLine;
-      }
-    }
-    if (line) lines.push(line);
+    imgBox.innerHTML = '<div style="color:#555;font-size:12px;padding:20px;">카드를 찾을 수 없어요</div>';
   }
 
-  const totalH = lines.length * lineHeight;
-  const startY = y - totalH / 2 + lineHeight / 2;
-  lines.forEach((l, i) => {
-    ctx.fillText(l, x, startY + i * lineHeight);
+  // 닷 업데이트
+  var dotEls = document.getElementById('preview-dots').children;
+  for (var i = 0; i < dotEls.length; i++) {
+    dotEls[i].style.background = i === idx ? '#fff' : 'rgba(255,255,255,0.4)';
+  }
+  // 카운터
+  document.getElementById('preview-counter').textContent = (idx+1) + ' / ' + cards.length;
+}
+
+function closePreviewModal() {
+  document.getElementById('preview-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ── 팀 공유 ──────────────────────────────────────
+async function shareCards() {
+  if (!cards.length) { showToast('먼저 카드를 생성해 주세요.'); return; }
+
+  document.getElementById('share-modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('share-status').textContent = '링크를 생성하고 있어요...';
+  document.getElementById('share-link-box').style.display = 'none';
+
+  try {
+    // share_id 생성
+    var shareId = 'hypo-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    var title = cards[0] && cards[0].title ? cards[0].title.replace(/\n/g, ' ') : 'MAGAZINIE — Card News Maker';
+
+    // Supabase 저장
+    var res = await fetch(SUPABASE_URL + '/rest/v1/cardnews_shares', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        share_id: shareId,
+        title: title,
+        cards: cards,
+        summary: lastSummary
+      })
+    });
+
+    if (!res.ok) throw new Error('저장 실패: ' + res.status);
+
+    // 공유 URL 생성
+    var shareUrl = location.origin + location.pathname + '?share=' + shareId;
+    document.getElementById('share-link-input').value = shareUrl;
+    document.getElementById('share-status').textContent = '✓ 링크가 생성됐어요!';
+    document.getElementById('share-link-box').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('share-status').textContent = '링크 생성 실패: ' + e.message;
+  }
+}
+
+function copyShareLink() {
+  var input = document.getElementById('share-link-input');
+  navigator.clipboard.writeText(input.value).then(function() {
+    showToast('링크를 복사했어요!');
   });
 }
 
-function downloadCard(canvas, num) {
-  const link = document.createElement('a');
-  link.download = `ritual_card_${String(num).padStart(2, '0')}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+function closeShareModal(e) {
+  if (e && e.target !== document.getElementById('share-modal')) return;
+  document.getElementById('share-modal').classList.remove('show');
+  document.body.style.overflow = '';
 }
 
-function downloadAll() {
-  const canvases = document.querySelectorAll('.card-canvas');
-  canvases.forEach((canvas, i) => {
-    setTimeout(() => downloadCard(canvas, i + 1), i * 300);
-  });
+// ── 공유 링크로 접속 시 카드 불러오기 ──────────────
+async function loadSharedCards() {
+  var params = new URLSearchParams(location.search);
+  var shareId = params.get('share');
+  if (!shareId) return;
+
+  showLoading('공유된 카드뉴스를 불러오는 중...');
+  try {
+    var res = await fetch(SUPABASE_URL + '/rest/v1/cardnews_shares?share_id=eq.' + encodeURIComponent(shareId) + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    var data = await res.json();
+    if (!data || !data[0]) throw new Error('카드를 찾을 수 없어요.');
+    var row = data[0];
+    cards = row.cards || [];
+    lastSummary = row.summary || {};
+    cardImages = {}; cardStyles = {}; cardAlign = {};
+    document.getElementById('cards-panel').style.display = 'block';
+    renderCards();
+    setStatus('ok', '공유된 카드뉴스를 불러왔어요: ' + (row.title || ''));
+    showToast('공유된 카드뉴스를 불러왔어요!');
+    setTimeout(function() { document.getElementById('cards-panel').scrollIntoView({ behavior: 'smooth' }); }, 200);
+  } catch(e) {
+    showToast('공유 링크 오류: ' + e.message);
+  } finally {
+    hideLoading();
+  }
 }
+
+window.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
