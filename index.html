@@ -338,10 +338,17 @@
 
 <!-- API 키 -->
 <div class="api-section">
-  <div class="api-row">
-    <input type="password" id="apiKey" placeholder="Gemini API Key 입력" autocomplete="off">
-    <button class="api-toggle" onclick="toggleKey()" id="keyToggle">👁</button>
+  <div class="api-row" style="margin-bottom:8px;">
+    <span style="font-size:12px;color:var(--text-soft);min-width:52px;">Gemini</span>
+    <input type="password" id="geminiKey" placeholder="Gemini API Key (우선 사용)" autocomplete="off">
+    <button class="api-toggle" onclick="toggleKey('geminiKey','geminiToggle')" id="geminiToggle">👁</button>
   </div>
+  <div class="api-row">
+    <span style="font-size:12px;color:var(--text-soft);min-width:52px;">Claude</span>
+    <input type="password" id="claudeKey" placeholder="Claude API Key (한도 초과 시 폴백)" autocomplete="off">
+    <button class="api-toggle" onclick="toggleKey('claudeKey','claudeToggle')" id="claudeToggle">👁</button>
+  </div>
+  <div style="font-size:11px;color:var(--text-soft);margin-top:6px;padding:0 4px;">Gemini 한도 초과 시 Claude로 자동 전환돼요</div>
 </div>
 
 <!-- 주제 입력 -->
@@ -421,9 +428,9 @@ const CHIP_COLORS = ['#F7C5A8','#F2D4C8','#F5E6C8','#C8D8C0','#D8CEEA','#FDF6F0'
 
 let cardData = []; // { text, subtitle, palette }
 
-function toggleKey() {
-  const inp = document.getElementById('apiKey');
-  const btn = document.getElementById('keyToggle');
+function toggleKey(inputId, btnId) {
+  const inp = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
   if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
   else { inp.type = 'password'; btn.textContent = '👁'; }
 }
@@ -435,13 +442,54 @@ function showError(msg) {
 }
 function hideError() { document.getElementById('errorBox').style.display = 'none'; }
 
+async function callGemini(prompt, apiKey) {
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.9, maxOutputTokens: 1000 }
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const msg = data?.error?.message || '';
+    const isQuota = msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('rate') || res.status === 429;
+    throw { isQuota, message: msg || `Gemini 오류 (${res.status})` };
+  }
+  let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return raw.replace(/```json|```/g, '').trim();
+}
+
+async function callClaude(prompt, apiKey) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || `Claude 오류 (${res.status})`);
+  let raw = data?.content?.[0]?.text || '';
+  return raw.replace(/```json|```/g, '').trim();
+}
+
 async function generateCards() {
-  const apiKey = document.getElementById('apiKey').value.trim();
+  const geminiKey = document.getElementById('geminiKey').value.trim();
+  const claudeKey = document.getElementById('claudeKey').value.trim();
   const topic = document.getElementById('topicInput').value.trim();
   const count = parseInt(document.getElementById('cardCount').value);
   const tone = document.getElementById('toneSelect').value;
 
-  if (!apiKey) { showError('Gemini API 키를 입력해주세요.'); return; }
+  if (!geminiKey && !claudeKey) { showError('API 키를 하나 이상 입력해주세요.'); return; }
   if (!topic) { showError('주제를 입력해주세요.'); return; }
   hideError();
 
@@ -456,9 +504,7 @@ async function generateCards() {
     document.getElementById('loadingMsg').textContent = loadingMsgs[li];
   }, 1800);
 
-  try {
-    const prompt = `
-당신은 감성적인 인스타그램 리추얼 카드 문구 작가입니다.
+  const prompt = `당신은 감성적인 인스타그램 리추얼 카드 문구 작가입니다.
 
 주제: "${topic}"
 톤: ${tone}
@@ -470,39 +516,38 @@ async function generateCards() {
 
 반드시 JSON 배열만 반환하세요. 다른 텍스트나 마크다운 없이 순수 JSON만:
 [
-  {"main": "메인 문구", "sub": "서브 문구"},
-  ...
-]
-`;
+  {"main": "메인 문구", "sub": "서브 문구"}
+]`;
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.9, maxOutputTokens: 1000 }
-      })
-    });
+  try {
+    let raw = null;
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `API 오류 (${res.status})`);
+    if (geminiKey) {
+      try {
+        raw = await callGemini(prompt, geminiKey);
+      } catch (e) {
+        if (e.isQuota && claudeKey) {
+          document.getElementById('loadingMsg').textContent = 'Gemini 한도 초과 → Claude로 전환 중...';
+          raw = await callClaude(prompt, claudeKey);
+        } else if (e.isQuota && !claudeKey) {
+          throw new Error('Gemini 한도 초과. Claude API 키도 입력해주세요.');
+        } else {
+          throw new Error(e.message);
+        }
+      }
+    } else {
+      raw = await callClaude(prompt, claudeKey);
     }
 
-    const data = await res.json();
-    let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    raw = raw.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(raw);
-
     cardData = parsed.map((item, i) => ({
       main: item.main || '',
       sub: item.sub || '',
       paletteIdx: i % PALETTES.length
     }));
-
     renderCards(topic);
   } catch (e) {
-    showError('오류: ' + e.message);
+    showError('오류: ' + (e.message || e));
   } finally {
     clearInterval(lInterval);
     document.getElementById('loading').style.display = 'none';
