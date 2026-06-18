@@ -374,7 +374,23 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
     <!-- 레터 만들기 -->
     <section id="letter-panel" class="workspace-card mode-panel">
       <div class="panel-title">레터 만들기</div>
-      <div class="panel-hint">기사 요약이 아니라, 주제를 바탕으로 putput.letter 같은 감성 정보형 카드뉴스를 만들어요. “이 기사는…” 같은 뉴스체가 나오지 않도록 레터형 프롬프트를 적용했어요.</div>
+      <div class="panel-hint">기사 요약이 아니라, 주제를 바탕으로 putput.letter 같은 감성 정보형 카드뉴스를 만들어요. 레터 문구는 Claude API로 생성합니다.</div>
+
+      <div class="manual-box">
+        <div class="manual-title">Claude API 연결</div>
+        <div class="manual-hint">레터 만들기 문구는 이 Claude API 키로 생성해요. 개인용 HTML이라 브라우저 localStorage에만 저장됩니다.</div>
+        <div class="form-row">
+          <div class="form-field" style="flex:2;">
+            <label for="claude-api-key">Claude API Key</label>
+            <input id="claude-api-key" type="password" placeholder="sk-ant-..." autocomplete="off" oninput="saveClaudeSettings()" />
+          </div>
+          <div class="form-field">
+            <label for="claude-model">Model</label>
+            <input id="claude-model" type="text" value="claude-sonnet-4-6" oninput="saveClaudeSettings()" />
+          </div>
+          <button type="button" class="btn ghost" onclick="toggleClaudeKey()">키 보기</button>
+        </div>
+      </div>
 
       <div class="form-grid">
         <div class="form-field">
@@ -506,11 +522,12 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
 <script>
 /*
   연결 정보
-  - 네이버 뉴스 검색/기사 수집/AI 생성은 아래 Cloudflare Worker로 호출합니다.
-  - Worker에 /generate-letter-cardnews가 없으면, /generate-cardnews(mode: letter)로 한 번 더 시도합니다.
-  - 그래도 실패하면 로컬 기본 문구로 레터 카드를 생성합니다.
+  - 네이버 뉴스 검색/기사 수집/기사형 AI 생성은 아래 Cloudflare Worker로 호출합니다.
+  - 레터 만들기는 Claude API를 직접 호출합니다.
+  - 레터 만들기에서는 기사 생성 API(/generate-cardnews)를 사용하지 않습니다.
 */
 const WORKER_API_BASE = 'https://wispy-mountain-4c30.yjuio9603.workers.dev';
+const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const SUGGEST_DEFAULT = ['뷰티','화장품','올리브영','장원영','무신사','패션','스타일','팝업','트렌드','서울'];
 const FORBIDDEN_LETTER_WORDS = [
   '이 기사는', '본 기사는', '독자들이', '도움을 줄 것입니다', '도움을 줄 수 있습니다',
@@ -575,6 +592,82 @@ async function workerApiJson(path, options) {
   try { data = JSON.parse(text); } catch(e) { throw new Error('Worker 응답을 읽지 못했어요.'); }
   if (!res.ok || data.ok === false) throw new Error(data.error || data.message || 'Worker 호출 실패');
   return data;
+}
+
+function saveClaudeSettings() {
+  try {
+    localStorage.setItem('magazinie_claude_key', $('claude-api-key') ? $('claude-api-key').value.trim() : '');
+    localStorage.setItem('magazinie_claude_model', $('claude-model') ? $('claude-model').value.trim() : '');
+  } catch(e) {}
+}
+function loadClaudeSettings() {
+  try {
+    if ($('claude-api-key')) $('claude-api-key').value = localStorage.getItem('magazinie_claude_key') || '';
+    if ($('claude-model')) $('claude-model').value = localStorage.getItem('magazinie_claude_model') || $('claude-model').value || 'claude-sonnet-4-6';
+  } catch(e) {}
+}
+function toggleClaudeKey() {
+  var input = $('claude-api-key');
+  if (!input) return;
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+function parseClaudeJsonArray(text) {
+  var raw = String(text || '').trim().replace(/```json|```/g, '').trim();
+  try {
+    var direct = JSON.parse(raw);
+    if (Array.isArray(direct)) return direct;
+    if (Array.isArray(direct.cards)) return direct.cards;
+  } catch(e) {}
+  var start = raw.indexOf('[');
+  var end = raw.lastIndexOf(']');
+  if (start >= 0 && end > start) {
+    var sliced = raw.slice(start, end + 1);
+    var parsed = JSON.parse(sliced);
+    if (Array.isArray(parsed)) return parsed;
+  }
+  throw new Error('Claude 응답에서 JSON 배열을 찾지 못했어요.');
+}
+function isNewsStyleCards(arr) {
+  var joined = arr.map(function(c) {
+    return [c && c.role, c && c.label, c && c.title, c && c.body].join(' ');
+  }).join(' ').toUpperCase();
+  return /NOW TRENDING|CONTEXT|THE TAKEAWAY|WHAT'S NEXT|WHY IT MATTERS|뉴스|기사|독자들이|도움을 줄 것입니다/.test(joined);
+}
+async function callClaudeForLetter(prompt) {
+  var apiKey = $('claude-api-key') ? $('claude-api-key').value.trim() : '';
+  var model = $('claude-model') ? $('claude-model').value.trim() : '';
+  if (!apiKey) throw new Error('Claude API 키를 입력해 주세요.');
+  if (!model) throw new Error('Claude 모델명을 입력해 주세요.');
+  saveClaudeSettings();
+
+  var res = await fetchWithTimeout(CLAUDE_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: model,
+      max_tokens: 2200,
+      temperature: 0.85,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  }, 60000);
+
+  var text = await res.text();
+  var data;
+  try { data = JSON.parse(text); } catch(e) { throw new Error('Claude 응답을 읽지 못했어요.'); }
+  if (!res.ok) {
+    var msg = data && data.error && data.error.message ? data.error.message : 'Claude API 호출 실패';
+    throw new Error(msg);
+  }
+  var content = '';
+  if (Array.isArray(data.content)) {
+    content = data.content.map(function(part) { return part && part.text ? part.text : ''; }).join('\n');
+  }
+  return parseClaudeJsonArray(content);
 }
 
 async function checkWorkerHealth(toast) {
@@ -857,116 +950,142 @@ async function generateFromLetter() {
 
   var token = ++generationSeq;
   $('cards-panel').style.display = 'block';
-  setStatus('warn', '레터 카드뉴스 생성 중: ' + clip(topic, 54));
-  showLoading('레터 카드뉴스를 만들고 있어요...');
-  try {
-    var data = null;
-    var prompt = buildLetterPrompt(topic, referenceText, tone, cardCount);
+  setStatus('warn', 'Claude로 레터 문구 생성 중: ' + clip(topic, 54));
+  showLoading('Claude API로 레터 카드뉴스를 쓰고 있어요...');
 
-    try {
-      data = await workerApiJson('/generate-letter-cardnews', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ topic: topic, referenceText: referenceText, tone: tone, cardCount: cardCount, prompt: prompt }),
-        timeout: 60000
-      });
-    } catch(firstError) {
-      // 전용 엔드포인트가 아직 없을 경우 기존 generate-cardnews에 mode: letter로 재시도
-      try {
-        data = await workerApiJson('/generate-cardnews', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            mode: 'letter',
-            topic: topic,
-            referenceText: referenceText,
-            tone: tone,
-            cardCount: cardCount,
-            prompt: prompt,
-            article: {
-              title: topic,
-              desc: referenceText || topic,
-              url: '',
-              origin: '',
-              domain: 'letter-input',
-              pubDate: new Date().toISOString()
-            },
-            query: topic,
-            manualText: '[레터주제]' + topic + '\n' + referenceText
-          }),
-          timeout: 60000
-        });
-      } catch(secondError) {
-        data = { ok: true, cards: localLetterCards(topic, referenceText, tone, cardCount), summary: null, local: true };
-      }
-    }
+  try {
+    var prompt = buildLetterPrompt(topic, referenceText, tone, cardCount);
+    var raw = await callClaudeForLetter(prompt);
 
     if (token !== generationSeq) return;
-    cards = normalizeLetterCards(data.cards || localLetterCards(topic, referenceText, tone, cardCount));
-    cards = cards.map(sanitizeCard);
-    lastSummary = data.summary || makeLetterSummary(topic, cards);
+    if (!raw.length) throw new Error('Claude가 빈 카드 배열을 반환했어요.');
+    if (isNewsStyleCards(raw)) {
+      throw new Error('Claude 응답이 기사형 문구로 나왔어요. 참고 문장을 줄이고 다시 생성해 주세요.');
+    }
+
+    cards = normalizeLetterCards(raw).map(sanitizeCard);
+    lastSummary = makeLetterSummary(topic, cards);
     cardImages = {}; cardStyles = {}; cardAlign = {};
     renderCards();
-    setStatus(data.local ? 'warn' : 'ok', data.local ? 'Worker 레터 API가 없어 로컬 예시 문구로 생성했어요. Worker에 /generate-letter-cardnews를 추가하면 AI 생성으로 바뀝니다.' : '레터 카드뉴스를 생성했어요.');
+
+    setStatus('ok', 'Claude API로 레터 카드뉴스 문구를 생성했어요.');
     setTimeout(function() { $('cards-panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
-    showToast('레터 카드뉴스 생성 완료');
+    showToast('Claude 레터 생성 완료');
   } catch(e) {
-    setStatus('warn', e.message || '레터 카드뉴스 생성 실패');
-    showToast(e.message || '레터 카드뉴스 생성 실패');
+    setStatus('warn', e.message || 'Claude 레터 생성 실패');
+    showToast(e.message || 'Claude 레터 생성 실패');
   } finally {
     hideLoading();
   }
 }
 
 function localLetterCards(topic, referenceText, tone, cardCount) {
-  var topicClean = clean(topic);
-  var n = Math.max(3, cardCount - 2);
-  var items = [
-    {
-      title: '좋아하는 공간 하나 정하기',
-      body: '늘 가던 곳 말고\n저장해뒀던 장소에 가보는 건 어때요?\n\n잠깐의 여유만으로도\n기분이 조금 달라질 수 있어요.'
-    },
-    {
-      title: '한 곳만 가볍게 정리하기',
-      body: '전부 다 해내려고 하면\n시작도 전에 지칠 수 있죠.\n\n눈에 잘 들어오는 한 곳만\n정리해도 충분해요.'
-    },
-    {
-      title: '휴대폰 없이 산책하기',
-      body: '멀리 가지 않아도 괜찮아요.\n\n동네 한 바퀴를 천천히 걷는 것만으로도\n머릿속이 조금 맑아질 수 있어요.'
-    },
-    {
-      title: '다음 날을 살짝 준비하기',
-      body: '월요일이 덜 버겁게 느껴지도록\n가방이나 옷을 미리 챙겨두는 것도 좋아요.\n\n사소한 준비가\n다음 시간을 조금 가볍게 만들어줘요.'
-    },
-    {
-      title: '아무것도 안 하는 시간 남기기',
-      body: '알차게 보내야 한다는 생각이\n오히려 부담이 될 때도 있어요.\n\n아무 계획 없이 쉬는 시간도\n분명 필요한 일정이에요.'
-    }
-  ];
-  var result = [{
-    type: 'cover',
-    title: topicClean.length <= 14 ? topicClean + '\n가장 바람직한 자세' : topicClean,
-    subtitle: referenceText ? clip(referenceText, 36) : '그냥 흘려보내기 아깝다면'
-  }];
-  for (var i = 0; i < n && i < items.length; i++) {
-    result.push({ type: 'content', num: String(i + 1), title: items[i].title, body: items[i].body });
-  }
-  result.push({ type: 'ending', title: '거창하지 않아도 괜찮아요', body: '오늘은 나를 위한 시간 하나만\n챙겨봐도 충분해요.' });
-  return result.slice(0, cardCount);
-}
+  var topicClean = clean(topic) || '나를 위한 시간';
+  var count = Number(cardCount || 7);
+  var isWeekend = /주말|토요일|일요일|토욜|일욜/.test(topicClean);
+  var isDatePrep = /준비|기념일|생일|데이트|약속|6월|20일/.test(topicClean);
 
+  var title = '';
+  var subtitle = '';
+  var items = [];
+
+  if (isWeekend) {
+    title = '주말을 보내는\n가장 바람직한 자세 5';
+    subtitle = '이번 주말, 모르고 지나가기엔 너무 아까워요';
+    items = [
+      {
+        title: '좋아하는 카페에서 커피 한 잔',
+        body: '늘 가던 곳 말고\n저장해뒀던 카페에 가보는 건 어때요?\n\n좋아하는 메뉴 하나와\n잠깐의 여유만으로도 기분이 달라질 수 있어요.'
+      },
+      {
+        title: '방 한 구석만 정리하기',
+        body: '집 전체를 치우려고 하면\n시작도 전에 지칠 수 있죠.\n\n책상 위나 침대 옆처럼\n눈에 잘 들어오는 한 곳만 정리해도 충분해요.'
+      },
+      {
+        title: '휴대폰 없이 산책하기',
+        body: '꼭 멀리 가지 않아도 괜찮아요.\n\n동네 한 바퀴를 천천히 걷는 것만으로도\n머릿속이 조금 맑아질 수 있어요.'
+      },
+      {
+        title: '한 주를 위한 작은 준비',
+        body: '월요일이 덜 버겁게 느껴지도록\n가방이나 옷을 미리 챙겨두는 것도 좋아요.\n\n사소한 준비가\n다음 주를 조금 더 가볍게 만들어줘요.'
+      },
+      {
+        title: '아무것도 안 하는 시간 남겨두기',
+        body: '주말을 알차게 보내야 한다는 생각이\n오히려 부담이 될 때도 있어요.\n\n아무 계획 없이 쉬는 시간도\n분명 필요한 일정이에요.'
+      }
+    ];
+  } else if (isDatePrep) {
+    title = topicClean + '\n가장 바람직한 준비 5';
+    subtitle = referenceText ? clip(referenceText, 38) : '기대되는 날을 조금 더 다정하게 맞이하는 법';
+    items = [
+      {
+        title: '제일 먼저 기분부터 정하기',
+        body: '완벽한 계획보다 중요한 건\n그날 어떤 기분으로 보내고 싶은지예요.\n\n설렘인지, 편안함인지\n먼저 정해두면 선택이 쉬워져요.'
+      },
+      {
+        title: '입을 옷은 미리 꺼내두기',
+        body: '당일 아침에 고르기 시작하면\n괜히 마음이 바빠질 수 있죠.\n\n전날 밤에 한 벌만 걸어둬도\n하루가 훨씬 가볍게 시작돼요.'
+      },
+      {
+        title: '동선은 짧게 확인하기',
+        body: '어디서 만나고, 얼마나 걸리는지만\n가볍게 확인해두면 충분해요.\n\n너무 촘촘한 계획보다\n조금의 여백이 더 오래 기억될 때도 있어요.'
+      },
+      {
+        title: '작은 선물 하나 준비하기',
+        body: '비싼 것이 아니어도 괜찮아요.\n\n상대가 좋아할 만한 작은 것 하나가\n그날의 분위기를 더 따뜻하게 만들어줘요.'
+      },
+      {
+        title: '기대는 하되 부담은 덜어두기',
+        body: '행복한 날일수록\n잘해야 한다는 마음이 커질 수 있어요.\n\n조금 서툴러도 괜찮아요.\n즐거우면 그걸로 충분해요.'
+      }
+    ];
+  } else {
+    title = topicClean.length <= 13 ? topicClean + '\n가장 바람직한 방법 5' : topicClean;
+    subtitle = referenceText ? clip(referenceText, 38) : '오늘의 시간을 조금 더 다정하게 쓰고 싶다면';
+    items = [
+      {
+        title: '지금 필요한 마음부터 고르기',
+        body: '무엇을 해야 할지 모르겠다면\n먼저 내 기분을 살펴보는 건 어때요?\n\n쉬고 싶은지, 움직이고 싶은지\n그 마음만 알아도 시작이 쉬워져요.'
+      },
+      {
+        title: '작게 시작할 수 있는 일 정하기',
+        body: '처음부터 완벽하게 하려고 하면\n오히려 부담스러울 수 있어요.\n\n5분 안에 할 수 있는 일 하나면\n오늘의 방향을 바꾸기에 충분해요.'
+      },
+      {
+        title: '좋아하는 장면 하나 넣기',
+        body: '좋아하는 음악이나 커피,\n짧은 산책처럼 사소한 것도 좋아요.\n\n작은 취향 하나가\n하루를 조금 더 내 것처럼 만들어줘요.'
+      },
+      {
+        title: '하지 않을 것도 정해두기',
+        body: '무엇을 할지 정하는 것만큼\n무엇을 덜어낼지도 중요해요.\n\n오늘은 하나쯤 미뤄도 괜찮아요.\n그 여백이 필요할 때도 있으니까요.'
+      },
+      {
+        title: '마지막엔 나를 칭찬하기',
+        body: '많이 해내지 못한 날이어도\n분명 챙긴 것이 있을 거예요.\n\n작은 선택 하나를 알아봐주는 것만으로도\n마음이 조금 편해질 수 있어요.'
+      }
+    ];
+  }
+
+  var result = [{ type: 'cover', title: title, subtitle: subtitle }];
+  var middleCount = Math.max(1, count - 2);
+  for (var i = 0; i < middleCount; i++) {
+    var item = items[i % items.length];
+    result.push({ type: 'content', num: String(i + 1), title: item.title, body: item.body });
+  }
+  result.push({
+    type: 'ending',
+    title: '거창하지 않아도 괜찮아요',
+    body: isWeekend
+      ? '이번 주말엔\n나를 위한 시간 하나만 챙겨봐도 충분해요.'
+      : '오늘은 나를 위한 선택 하나만\n조용히 챙겨봐도 충분해요.'
+  });
+  return result.slice(0, count);
+}
 function normalizeLetterCards(rawCards) {
   var arr = Array.isArray(rawCards) ? rawCards : [];
   var magName = magSettings.magName || 'PUTPUT LETTER';
 
-  // 혹시 기존 기사형 구조가 돌아오면 레터형으로 다시 감싼다.
-  if (arr.length && (arr[0].role || arr[0].label) && !arr[0].subtitle && !arr[0].num) {
-    return arr.map(function(c, i) {
-      if (i === 0) return { label: 'COVER', role: 'COVER', title: keepLine(c.title || ''), subtitle: clean(c.subtitle || ''), body: '', type: 'hook', magName: magName };
-      if (i === arr.length - 1) return { label: 'ENDING', role: 'ENDING', title: clean(c.title || '거창하지 않아도 괜찮아요'), body: keepLine(c.body || ''), type: 'cta' };
-      return { label: 'CARD ' + String(i).padStart(2, '0'), role: 'LETTER', title: clean(c.title || ''), body: keepLine(c.body || ''), type: 'body' };
-    });
-  }
+  // 기사형 구조는 generateFromLetter에서 폐기합니다. 여기서는 순수 레터형 JSON만 변환합니다.
 
   return arr.map(function(card, index) {
     if (card.type === 'cover' || index === 0) {
@@ -1237,6 +1356,7 @@ function renderPreviewCard(idx) {
 function closePreviewModal() { $('preview-modal').style.display = 'none'; document.body.style.overflow = ''; }
 
 function init() {
+  loadClaudeSettings();
   renderSearchChips();
   checkWorkerHealth(false);
   $('search-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addTag(); } });
