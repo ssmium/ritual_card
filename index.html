@@ -1272,26 +1272,46 @@ function copyCaption() {
 async function captureCardOffscreen(i) {
   var modal = $('preview-modal');
   var wasHidden = modal.style.display === 'none' || !modal.style.display;
+
+  // 모달 먼저 열고 레이아웃 잡힌 후 렌더링
   if (wasHidden) {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    await new Promise(function(r) { setTimeout(r, 80); }); // 레이아웃 확정 대기
   }
+
   renderPreviewCard(i);
   await new Promise(function(r) { setTimeout(r, 120); });
-  var target = document.querySelector('.preview-card-area');
+
+  // nav버튼/dots 숨기기
+  var prevBtn = $('preview-prev-btn');
+  var nextBtn = $('preview-next-btn');
+  var dots = $('preview-dots');
+  if (prevBtn) prevBtn.style.display = 'none';
+  if (nextBtn) nextBtn.style.display = 'none';
+  if (dots) dots.style.display = 'none';
+
+  // preview-card-img 안의 wrapper만 캡처
+  var imgBox = $('preview-card-img');
+  var wrapper = imgBox.firstElementChild;
+  var target = wrapper || imgBox;
   var tw = target.offsetWidth;
   var th = target.offsetHeight;
-  // 미리보기에 보이는 것과 완전히 동일하게: windowWidth를 미리보기 박스 너비로 고정
+
   var canvas = await html2canvas(target, {
     scale: 3,
     useCORS: true,
     allowTaint: true,
     backgroundColor: null,
     width: tw,
-    height: th,
-    windowWidth: tw,
-    windowHeight: th
+    height: th
   });
+
+  // nav버튼/dots 복원
+  if (prevBtn) prevBtn.style.display = '';
+  if (nextBtn) nextBtn.style.display = '';
+  if (dots) dots.style.display = '';
+
   if (wasHidden) {
     modal.style.display = 'none';
     document.body.style.overflow = '';
