@@ -802,7 +802,7 @@ function normalizeArticleCards(rawCards, article) {
       return { label: 'CARD ' + String(idx + 1).padStart(2, '0'), role: role, title: clean(c.title || role), body: keepLine(c.body || ''), type: 'body' };
     }),
     { label: 'ENDING', role: 'ENDING', title: clean(cta.title || '한 장씩 넘기면 정리 끝'), body: keepLine(cta.body || '복잡한 이슈, 핵심만 쉽게\n저장해두고 다시 확인해요.'), type: 'cta' }
-  ].flat();
+  ].flat().map(sanitizeCard);
 }
 
 /* 레터 만들기 */
