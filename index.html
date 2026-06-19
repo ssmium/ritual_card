@@ -374,23 +374,7 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
     <!-- 레터 만들기 -->
     <section id="letter-panel" class="workspace-card mode-panel">
       <div class="panel-title">레터 만들기</div>
-      <div class="panel-hint">기사 요약이 아니라, 주제를 바탕으로 putput.letter 같은 감성 정보형 카드뉴스를 만들어요. 레터 문구는 Claude API로 생성합니다.</div>
-
-      <div class="manual-box">
-        <div class="manual-title">Claude API 연결</div>
-        <div class="manual-hint">레터 만들기 문구는 이 Claude API 키로 생성해요. 개인용 HTML이라 브라우저 localStorage에만 저장됩니다.</div>
-        <div class="form-row">
-          <div class="form-field" style="flex:2;">
-            <label for="claude-api-key">Claude API Key</label>
-            <input id="claude-api-key" type="password" placeholder="sk-ant-..." autocomplete="off" oninput="saveClaudeSettings()" />
-          </div>
-          <div class="form-field">
-            <label for="claude-model">Model</label>
-            <input id="claude-model" type="text" value="claude-sonnet-4-6" oninput="saveClaudeSettings()" />
-          </div>
-          <button type="button" class="btn ghost" onclick="toggleClaudeKey()">키 보기</button>
-        </div>
-      </div>
+      <div class="panel-hint">기사 요약이 아니라, 주제를 바탕으로 popo레터 같은 감성 정보형 카드뉴스를 만들어요. Gemini로 생성하고, 용량 초과 시 Claude로 자동 전환돼요.</div>
 
       <div class="form-grid">
         <div class="form-field">
@@ -492,7 +476,7 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
     <div class="preview-profile">
       <div id="preview-profile-initial" class="preview-profile-initial">P</div>
       <div>
-        <div id="preview-profile-name" style="font-size:13px;font-weight:900;">putput.letter</div>
+        <div id="preview-profile-name" style="font-size:13px;font-weight:900;">popo레터</div>
         <div style="font-size:11px;color:#999;">Another Minute 15s</div>
       </div>
       <div style="margin-left:auto;font-size:18px;color:#fff;">···</div>
@@ -527,7 +511,7 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
   - 레터 만들기에서는 기사 생성 API(/generate-cardnews)를 사용하지 않습니다.
 */
 const WORKER_API_BASE = 'https://wispy-mountain-4c30.yjuio9603.workers.dev';
-const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+// AI 생성은 Worker(/generate-letter, /generate-cardnews) 경유 — Gemini 1순위, 용량 초과 시 Claude 자동 전환
 const SUGGEST_DEFAULT = ['뷰티','화장품','올리브영','장원영','무신사','패션','스타일','팝업','트렌드','서울'];
 const FORBIDDEN_LETTER_WORDS = [
   '이 기사는', '본 기사는', '독자들이', '도움을 줄 것입니다', '도움을 줄 수 있습니다',
@@ -549,7 +533,7 @@ var previewIndex = 0;
 var currentMode = 'article';
 var magSettings = {
   magName: 'PUTPUT LETTER',
-  magHandle: 'putput.letter',
+  magHandle: 'popo레터',
   palette: 'peach'
 };
 
@@ -572,7 +556,7 @@ function switchMode(mode) {
   $('results-panel').style.display = mode === 'article' && currentArticles.length ? 'block' : 'none';
   $('page-lead').textContent = mode === 'article'
     ? '키워드로 기사를 검색하고, 기사를 선택하면 AI가 카드뉴스를 만들어요. 아래에서 가로로 넘겨보고 문장·색상·이미지를 바로 수정할 수 있어요.'
-    : '기사 요약이 아니라, 직접 입력한 주제를 바탕으로 감성 정보형 레터 카드뉴스를 만들어요. putput.letter처럼 사진 위에 짧고 다정한 문구가 올라가는 톤입니다.';
+    : '기사 요약이 아니라, 직접 입력한 주제를 바탕으로 감성 정보형 레터 카드뉴스를 만들어요. popo레터처럼 사진 위에 짧고 다정한 문구가 올라가는 톤입니다.';
 }
 
 async function fetchWithTimeout(url, opt, timeout) {
@@ -594,24 +578,7 @@ async function workerApiJson(path, options) {
   return data;
 }
 
-function saveClaudeSettings() {
-  try {
-    localStorage.setItem('magazinie_claude_key', $('claude-api-key') ? $('claude-api-key').value.trim() : '');
-    localStorage.setItem('magazinie_claude_model', $('claude-model') ? $('claude-model').value.trim() : '');
-  } catch(e) {}
-}
-function loadClaudeSettings() {
-  try {
-    if ($('claude-api-key')) $('claude-api-key').value = localStorage.getItem('magazinie_claude_key') || '';
-    if ($('claude-model')) $('claude-model').value = localStorage.getItem('magazinie_claude_model') || $('claude-model').value || 'claude-sonnet-4-6';
-  } catch(e) {}
-}
-function toggleClaudeKey() {
-  var input = $('claude-api-key');
-  if (!input) return;
-  input.type = input.type === 'password' ? 'text' : 'password';
-}
-function parseClaudeJsonArray(text) {
+function parseLetterJsonArray(text) {
   var raw = String(text || '').trim().replace(/```json|```/g, '').trim();
   try {
     var direct = JSON.parse(raw);
@@ -625,7 +592,7 @@ function parseClaudeJsonArray(text) {
     var parsed = JSON.parse(sliced);
     if (Array.isArray(parsed)) return parsed;
   }
-  throw new Error('Claude 응답에서 JSON 배열을 찾지 못했어요.');
+  throw new Error('레터 응답에서 JSON 배열을 찾지 못했어요.');
 }
 function isNewsStyleCards(arr) {
   var joined = arr.map(function(c) {
@@ -633,41 +600,17 @@ function isNewsStyleCards(arr) {
   }).join(' ').toUpperCase();
   return /NOW TRENDING|CONTEXT|THE TAKEAWAY|WHAT'S NEXT|WHY IT MATTERS|뉴스|기사|독자들이|도움을 줄 것입니다/.test(joined);
 }
-async function callClaudeForLetter(prompt) {
-  var apiKey = $('claude-api-key') ? $('claude-api-key').value.trim() : '';
-  var model = $('claude-model') ? $('claude-model').value.trim() : '';
-  if (!apiKey) throw new Error('Claude API 키를 입력해 주세요.');
-  if (!model) throw new Error('Claude 모델명을 입력해 주세요.');
-  saveClaudeSettings();
-
-  var res = await fetchWithTimeout(CLAUDE_API_URL, {
+// Worker 경유로 Gemini → Claude 폴백 레터 생성
+async function callWorkerForLetter(topic, referenceText, tone, cardCount) {
+  var data = await workerApiJson('/generate-letter', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: model,
-      max_tokens: 2200,
-      temperature: 0.85,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  }, 60000);
-
-  var text = await res.text();
-  var data;
-  try { data = JSON.parse(text); } catch(e) { throw new Error('Claude 응답을 읽지 못했어요.'); }
-  if (!res.ok) {
-    var msg = data && data.error && data.error.message ? data.error.message : 'Claude API 호출 실패';
-    throw new Error(msg);
-  }
-  var content = '';
-  if (Array.isArray(data.content)) {
-    content = data.content.map(function(part) { return part && part.text ? part.text : ''; }).join('\n');
-  }
-  return parseClaudeJsonArray(content);
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topic: topic, referenceText: referenceText, tone: tone, cardCount: cardCount }),
+    timeout: 60000
+  });
+  if (!data.ok) throw new Error(data.error || 'Worker 레터 생성 실패');
+  if (!Array.isArray(data.cards) || !data.cards.length) throw new Error('Worker가 빈 카드를 반환했어요.');
+  return { cards: data.cards, usedModel: data.usedModel || '' };
 }
 
 async function checkWorkerHealth(toast) {
@@ -870,76 +813,6 @@ function fillLetterSample() {
   $('letter-count').value = '7';
 }
 
-function buildLetterPrompt(topic, referenceText, tone, cardCount) {
-  return `당신은 인스타그램 감성 레터형 카드뉴스 에디터입니다.
-
-이 작업은 뉴스 기사 요약이 아닙니다.
-사용자가 입력한 주제를 바탕으로, 인스타그램에서 옆으로 넘겨보는 정보성 레터 카드뉴스를 만듭니다.
-
-원하는 톤:
-- putput.letter 같은 감성 카드뉴스 톤
-- 사진 위에 짧은 문구가 올라가는 구성
-- 일상적이고 다정한 제안형 말투
-- 정보성은 있지만 기사처럼 딱딱하지 않게
-- 친구가 조용히 추천해주는 느낌
-- 저장하고 싶어지는 인스타 카드뉴스
-
-금지 표현:
-- "이 기사는"
-- "독자들이"
-- "도움을 줄 것입니다"
-- "삶의 질을 높이는 계기"
-- "건강한 삶을 유지하는 데 도움"
-- "본 콘텐츠는"
-- "효과적입니다"
-- "필수입니다"
-
-선호 표현:
-- "~해보는 건 어때요?"
-- "~만으로도 충분해요"
-- "거창하지 않아도 괜찮아요"
-- "조금 가벼워질 수 있어요"
-- "오늘은 이렇게 보내봐도 좋아요"
-- "잠깐의 여유만으로도 좋아요"
-
-주제:
-"${topic}"
-
-참고 문장:
-"${referenceText || ''}"
-
-톤:
-"${tone}"
-
-카드 수:
-${cardCount}장
-
-카드 구성:
-1. 첫 번째 카드: 표지
-   - 큰 제목
-   - 짧은 부제
-2. 중간 카드:
-   - 번호
-   - 짧은 소제목
-   - 본문 2~4줄
-   - 실천 가능한 제안
-3. 마지막 카드:
-   - 부드러운 마무리
-   - 저장하거나 따라 해보고 싶게 만드는 한 줄
-
-출력 규칙:
-- 반드시 JSON 배열만 반환하세요.
-- 설명 문장, 마크다운, 코드블록 없이 순수 JSON만 반환하세요.
-- 각 문장은 이미지 위에 올릴 수 있도록 짧게 작성하세요.
-- body는 줄바꿈이 있는 문자열로 작성하세요.
-
-JSON 형식:
-[
-  {"type":"cover","title":"표지 제목","subtitle":"짧은 부제"},
-  {"type":"content","num":"1","title":"소제목","body":"본문 첫 줄\\n본문 둘째 줄\\n본문 셋째 줄"},
-  {"type":"ending","title":"마무리 제목","body":"마무리 문장 첫 줄\\n마무리 문장 둘째 줄"}
-]`;
-}
 
 async function generateFromLetter() {
   var topic = $('letter-topic').value.trim();
@@ -950,17 +823,18 @@ async function generateFromLetter() {
 
   var token = ++generationSeq;
   $('cards-panel').style.display = 'block';
-  setStatus('warn', 'Claude로 레터 문구 생성 중: ' + clip(topic, 54));
-  showLoading('Claude API로 레터 카드뉴스를 쓰고 있어요...');
+  setStatus('warn', 'Gemini로 레터 문구 생성 중: ' + clip(topic, 54));
+  showLoading('Gemini로 레터 카드뉴스를 쓰고 있어요...');
 
   try {
-    var prompt = buildLetterPrompt(topic, referenceText, tone, cardCount);
-    var raw = await callClaudeForLetter(prompt);
+    var result = await callWorkerForLetter(topic, referenceText, tone, cardCount);
+    var raw = result.cards;
+    var usedModel = result.usedModel || '';
 
     if (token !== generationSeq) return;
-    if (!raw.length) throw new Error('Claude가 빈 카드 배열을 반환했어요.');
+    if (!raw.length) throw new Error('레터 카드 배열이 비어있어요.');
     if (isNewsStyleCards(raw)) {
-      throw new Error('Claude 응답이 기사형 문구로 나왔어요. 참고 문장을 줄이고 다시 생성해 주세요.');
+      throw new Error('응답이 기사형 문구로 나왔어요. 참고 문장을 줄이고 다시 생성해 주세요.');
     }
 
     cards = normalizeLetterCards(raw).map(sanitizeCard);
@@ -968,12 +842,13 @@ async function generateFromLetter() {
     cardImages = {}; cardStyles = {}; cardAlign = {};
     renderCards();
 
-    setStatus('ok', 'Claude API로 레터 카드뉴스 문구를 생성했어요.');
+    var modelLabel = usedModel ? ' (' + usedModel + ')' : '';
+    setStatus('ok', '레터 카드뉴스 문구를 생성했어요.' + modelLabel);
     setTimeout(function() { $('cards-panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
-    showToast('Claude 레터 생성 완료');
+    showToast('레터 생성 완료' + modelLabel);
   } catch(e) {
-    setStatus('warn', e.message || 'Claude 레터 생성 실패');
-    showToast(e.message || 'Claude 레터 생성 실패');
+    setStatus('warn', e.message || '레터 생성 실패');
+    showToast(e.message || '레터 생성 실패');
   } finally {
     hideLoading();
   }
@@ -1187,7 +1062,7 @@ function cardHtml(c, i) {
   var textAlign = align;
   if (align === 'center') textAlign = 'center';
   var magName = c.magName || magSettings.magName || 'PUTPUT LETTER';
-  var magHandle = magSettings.magHandle || 'putput.letter';
+  var magHandle = magSettings.magHandle || 'popo레터';
   var counter = (i + 1) + '/' + cards.length;
 
   if (c.type === 'hook') {
@@ -1200,7 +1075,7 @@ function cardHtml(c, i) {
       + '<div style="font-size:' + st.size + 'px;line-height:1.22;font-weight:950;letter-spacing:-.06em;word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.25)">' + renderHookTitle(c.title, st.title, st.accent) + '</div>'
       + (c.subtitle ? '<div style="margin-top:12px;font-size:14px;line-height:1.35;font-weight:700;color:rgba(255,255,255,.94);word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.subtitle) + '</div>' : '')
       + '</div>'
-      + '<div style="position:absolute;left:10px;bottom:10px;color:rgba(255,255,255,.52);font-size:8px;z-index:2">출처 l Pinterest</div>'
+      + ''
       + '</div>';
   }
 
@@ -1224,7 +1099,7 @@ function cardHtml(c, i) {
     + '<div style="position:absolute;left:18px;right:18px;bottom:28px;text-align:' + textAlign + ';z-index:2">'
     + '<div style="font-size:' + Math.max(11, st.size - 5) + 'px;line-height:1.72;font-weight:650;color:' + st.body + ';white-space:pre-line;word-break:keep-all;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.body || '') + '</div>'
     + '</div>'
-    + '<div style="position:absolute;left:10px;bottom:10px;color:rgba(255,255,255,.48);font-size:8px;z-index:2">출처 l Pinterest</div>'
+    + ''
     + '</div>';
 }
 function renderEdit(c, i) {
@@ -1321,7 +1196,7 @@ function openPreview() {
   var modal = $('preview-modal');
   $('preview-card-img').innerHTML = '';
   $('preview-dots').innerHTML = '';
-  var handle = (magSettings.magHandle || 'putput.letter').replace('@','');
+  var handle = (magSettings.magHandle || 'popo레터').replace('@','');
   $('preview-profile-name').textContent = handle;
   $('preview-profile-initial').textContent = handle.charAt(0).toUpperCase();
   for (var di = 0; di < cards.length; di++) {
@@ -1356,7 +1231,7 @@ function renderPreviewCard(idx) {
 function closePreviewModal() { $('preview-modal').style.display = 'none'; document.body.style.overflow = ''; }
 
 function init() {
-  loadClaudeSettings();
+  // (Claude 직접 호출 제거 — Worker 경유로 전환됨)
   renderSearchChips();
   checkWorkerHealth(false);
   $('search-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addTag(); } });
