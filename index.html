@@ -1073,7 +1073,7 @@ function cardHtml(c, i) {
       + '<div style="position:absolute;right:14px;top:14px;z-index:3;background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</div>'
       + '<div style="position:absolute;left:18px;right:18px;bottom:30px;text-align:' + textAlign + ';z-index:2">'
       + '<div style="font-size:' + st.size + 'px;line-height:1.22;font-weight:950;letter-spacing:-.06em;word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.25)">' + renderHookTitle(c.title, st.title, st.accent) + '</div>'
-      + (c.subtitle ? '<div style="margin-top:12px;font-size:14px;line-height:1.35;font-weight:700;color:rgba(255,255,255,.94);word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.subtitle) + '</div>' : '')
+
       + '</div>'
       + ''
       + '</div>';
@@ -1109,7 +1109,7 @@ function renderEdit(c, i) {
   div.innerHTML = '<div class="edit-panel-head">' + escapeHtml(c.label) + '</div>'
     + '<div class="edit-label">제목 수정</div>'
     + '<textarea id="title-' + i + '" class="title-input" oninput="applyText(' + i + ', true)">' + escapeHtml(c.title || '') + '</textarea>'
-    + (c.type === 'hook' ? '<div class="edit-label">부제 수정</div><textarea id="subtitle-' + i + '" class="title-input" oninput="applyText(' + i + ', true)">' + escapeHtml(c.subtitle || '') + '</textarea>' : '')
+
     + (c.type !== 'hook' ? '<div class="edit-label">본문 수정</div><textarea id="body-' + i + '" class="body-input" oninput="applyText(' + i + ', true)">' + escapeHtml(c.body || '') + '</textarea>' : '')
     + '<div class="color-grid">'
     + '<label class="color-item">배경 <input type="color" value="' + st.bg + '" onchange="setStyle(' + i + ',\'bg\',this.value)"></label>'
@@ -1246,13 +1246,22 @@ function renderPreviewCard(idx) {
   previewIndex = idx;
   var imgBox = $('preview-card-img');
   imgBox.innerHTML = '';
-  var original = $('card-' + idx);
-  if (original) {
-    var clone = original.cloneNode(true);
-    clone.removeAttribute('id');
-    clone.style.cssText = 'width:100%;height:100%;border-radius:0;position:relative;';
-    imgBox.appendChild(clone);
-  }
+
+  var boxSize = imgBox.offsetWidth || 360;
+  var scaleFactor = boxSize / 240;
+  var st = styleOf(idx);
+  var savedSize = st.size;
+  cardStyles[idx] = Object.assign({}, st, { size: Math.round(savedSize * scaleFactor) });
+  var html = cardHtml(cards[idx], idx);
+  cardStyles[idx] = st;
+
+  var wrapper = document.createElement('div');
+  wrapper.style.cssText = 'width:' + boxSize + 'px;height:' + boxSize + 'px;flex-shrink:0;';
+  wrapper.innerHTML = html;
+  var inner = wrapper.firstChild;
+  if (inner) { inner.style.width = boxSize + 'px'; inner.style.height = boxSize + 'px'; inner.style.borderRadius = '0'; }
+  imgBox.appendChild(wrapper);
+
   var dotEls = $('preview-dots').children;
   for (var i = 0; i < dotEls.length; i++) dotEls[i].style.background = i === idx ? '#fff' : 'rgba(255,255,255,0.4)';
   $('preview-counter').textContent = (idx + 1) + ' / ' + cards.length;
