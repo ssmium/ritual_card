@@ -223,7 +223,7 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
 .card-row { display: flex; gap: 18px; min-width: max-content; }
 .card-col { display: flex; flex-direction: column; align-items: center; gap: 8px; scroll-snap-align: start; }
 .card-label { font-size: 11px; color: #737373; font-weight: 900; letter-spacing: .18em; }
-.card-wrap { width: 240px; height: 240px; border-radius: 16px; position: relative; background: transparent; }
+.card-wrap { width: 240px; height: 320px; border-radius: 16px; position: relative; background: transparent; }
 .card-inner { position: relative; width: 100%; height: 100%; border-radius: 16px; overflow: hidden; box-shadow: rgba(0,0,0,.20) 0 18px 34px -20px, rgba(0,0,0,.08) 0 6px 14px -8px; }
 .align-row { display: flex; gap: 8px; align-items: center; width: 240px; }
 .align-row button { flex: 1; height: 34px; border: 1px solid var(--rule); background: #fff; border-radius: 7px; cursor: pointer; font-weight: 900; color: #6c6678; }
@@ -273,7 +273,7 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
 .preview-topbar { height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-weight: 800; }
 .preview-profile { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid #111; border-bottom: 1px solid #111; background: #000; }
 .preview-profile-initial { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#f09433,#dc2743,#bc1888); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: #fff; flex-shrink: 0; }
-.preview-card-area { background: #111; position: relative; width: 100%; aspect-ratio: 1; }
+.preview-card-area { background: #111; position: relative; width: 100%; aspect-ratio: 3/4; }
 .preview-card-img { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .preview-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.88); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; font-weight: 900; color: #111; box-shadow: 0 2px 8px rgba(0,0,0,.25); user-select: none; }
 .preview-prev { left: 10px; } .preview-next { right: 10px; }
@@ -301,7 +301,7 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
   .download-row { display: block; }
   .download-actions { justify-content: flex-start; margin-top: 12px; }
   .card-wrap, .img-btn, .align-row { width: 220px; }
-  .card-wrap { height: 220px; }
+  .card-wrap { height: 293px; }
   .edit-panel { width: 220px; min-width: 220px; }
   .article { grid-template-columns: 46px 1fr; }
   .article button { grid-column: 1/-1; }
@@ -1260,20 +1260,46 @@ function copyCaption() {
 /* 다운로드 */
 // 화면에 보이는 카드를 그대로 고해상도 캡처
 async function captureCardOffscreen(i) {
+  // 화면 카드(240×240)를 3:4(1080×1350) 이미지로 캡처
   var el = $('card-' + i);
   var inner = el.querySelector('.card-inner');
+  var st = styleOf(i);
+  var bg = st.bg || '#080808';
+
+  var OUT_W = 1080, OUT_H = 1350;
+  var SCALE = OUT_W / 240; // 4.5
+
+  // border-radius 제거
   var prevRadius = inner ? inner.style.borderRadius : '';
   var prevElRadius = el.style.borderRadius;
   if (inner) inner.style.borderRadius = '0';
   el.style.borderRadius = '0';
+
+  // 카드를 scale로 확대한 wrapper 생성 (위아래 여백 배경색으로 채움)
+  var wrapper = document.createElement('div');
+  wrapper.style.cssText = [
+    'position:fixed', 'left:-' + (OUT_W + 200) + 'px', 'top:0',
+    'width:' + OUT_W + 'px', 'height:' + OUT_H + 'px',
+    'background:' + bg, 'overflow:hidden', 'z-index:-1',
+    'display:flex', 'align-items:center', 'justify-content:center'
+  ].join(';') + ';';
+
+  var scaled = document.createElement('div');
+  scaled.style.cssText = 'width:240px;height:240px;transform-origin:center center;transform:scale(' + SCALE + ');flex-shrink:0;border-radius:0;';
+  scaled.innerHTML = el.outerHTML.replace(/id="card-\d+"/, 'id="card-capture"');
+  var scaledInner = scaled.querySelector('.card-inner');
+  if (scaledInner) scaledInner.style.borderRadius = '0';
+
+  wrapper.appendChild(scaled);
+  document.body.appendChild(wrapper);
+
   try {
-    return await html2canvas(el, {
-      scale: 4,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: null
+    return await html2canvas(wrapper, {
+      scale: 1, useCORS: true, allowTaint: true,
+      backgroundColor: null, width: OUT_W, height: OUT_H
     });
   } finally {
+    document.body.removeChild(wrapper);
     if (inner) inner.style.borderRadius = prevRadius;
     el.style.borderRadius = prevElRadius;
   }
@@ -1333,20 +1359,22 @@ function renderPreviewCard(idx) {
   var imgBox = $('preview-card-img');
   imgBox.innerHTML = '';
 
-  // CSS scale로 240px 기준 카드를 박스 크기에 맞게 확대 (좌표 깨짐 없음)
-  var boxSize = imgBox.offsetWidth || 360;
-  var BASE = 240;
-  var scale = boxSize / BASE;
+  // CSS scale로 카드 원본(240×320) 기준으로 미리보기 박스에 맞게 확대
+  var boxW = imgBox.offsetWidth || 360;
+  var BASE_W = 240;
+  var BASE_H = 320; // 3:4
+  var boxH = boxW * BASE_H / BASE_W;
+  var scale = boxW / BASE_W;
 
   var html = cardHtml(cards[idx], idx);
   var inner = document.createElement('div');
-  inner.style.cssText = 'width:' + BASE + 'px;height:' + BASE + 'px;transform-origin:top left;transform:scale(' + scale + ');flex-shrink:0;';
+  inner.style.cssText = 'width:' + BASE_W + 'px;height:' + BASE_H + 'px;transform-origin:top left;transform:scale(' + scale + ');flex-shrink:0;';
   inner.innerHTML = html;
   var cardEl = inner.firstChild;
-  if (cardEl) cardEl.style.borderRadius = '0';
+  if (cardEl) { cardEl.style.borderRadius = '0'; cardEl.style.height = BASE_H + 'px'; }
 
   var wrapper = document.createElement('div');
-  wrapper.style.cssText = 'width:' + boxSize + 'px;height:' + boxSize + 'px;overflow:hidden;flex-shrink:0;';
+  wrapper.style.cssText = 'width:' + boxW + 'px;height:' + boxH + 'px;overflow:hidden;flex-shrink:0;';
   wrapper.appendChild(inner);
   imgBox.appendChild(wrapper);
 
