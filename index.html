@@ -1350,11 +1350,9 @@ function renderPreviewCard(idx) {
   var imgBox = $('preview-card-img');
   imgBox.innerHTML = '';
 
-  // CSS scale로 카드 원본(240×320) 기준으로 미리보기 박스에 맞게 확대
   var boxW = imgBox.offsetWidth || 360;
   var BASE_W = 240;
   var BASE_H = 320; // 3:4
-  var boxH = boxW * BASE_H / BASE_W;
   var scale = boxW / BASE_W;
 
   var html = cardHtml(cards[idx], idx);
@@ -1366,19 +1364,20 @@ function renderPreviewCard(idx) {
     cardEl.style.borderRadius = '0';
     cardEl.style.width = BASE_W + 'px';
     cardEl.style.height = BASE_H + 'px';
-    // 이미지도 card-inner 전체 높이에 맞게 늘리기
     var imgEl = cardEl.querySelector('img');
     if (imgEl) { imgEl.style.width = '100%'; imgEl.style.height = '100%'; imgEl.style.objectFit = 'cover'; }
   }
 
   var wrapper = document.createElement('div');
-  wrapper.style.cssText = 'width:' + boxW + 'px;height:' + boxH + 'px;overflow:hidden;flex-shrink:0;';
+  wrapper.style.cssText = 'width:' + boxW + 'px;height:' + (BASE_H * scale) + 'px;overflow:hidden;flex-shrink:0;';
   wrapper.appendChild(inner);
   imgBox.appendChild(wrapper);
 
+  // preview-counter 숨기기 (cardHtml 안에 이미 있음)
+  $('preview-counter').style.display = 'none';
+
   var dotEls = $('preview-dots').children;
   for (var i = 0; i < dotEls.length; i++) dotEls[i].style.background = i === idx ? '#fff' : 'rgba(255,255,255,0.4)';
-  $('preview-counter').textContent = (idx + 1) + ' / ' + cards.length;
 }
 function closePreviewModal() { $('preview-modal').style.display = 'none'; document.body.style.overflow = ''; }
 
