@@ -1278,9 +1278,8 @@ async function captureCardOffscreen(i) {
   }
   renderPreviewCard(i);
   await new Promise(function(r) { setTimeout(r, 120); });
-  // preview-card-img 안의 실제 렌더된 wrapper(첫번째 자식)를 캡처
-  var area = $('preview-card-img');
-  var target = area.firstChild || area;
+  // preview-card-area 전체를 캡처 → 미리보기에서 보이는 것과 완전히 동일
+  var target = document.querySelector('.preview-card-area');
   var canvas = await html2canvas(target, {
     scale: 3,
     useCORS: true,
