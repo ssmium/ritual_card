@@ -323,6 +323,11 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
     <button type="button" id="nav-article" class="active" onclick="switchMode('article')"><span class="num">①</span>기사로 만들기</button>
     <button type="button" id="nav-letter" onclick="switchMode('letter')"><span class="num">②</span>레터 만들기</button>
   </div>
+  <div class="side-steps" style="margin-top:auto;">
+    <button type="button" onclick="openMagModal()" style="width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:10px;background:#fff;cursor:pointer;font-size:12px;font-weight:900;color:#141019;text-align:left;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:15px;">⚙️</span> 매거진 설정
+    </button>
+  </div>
   <div class="side-steps">
     <div class="side-steps-head">카드뉴스 만드는 순서</div>
     <ol class="side-step-list">
@@ -467,6 +472,79 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
 </div>
 
 <!-- 인스타 미리보기 모달 -->
+<!-- 매거진 설정 모달 -->
+<div id="mag-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9600;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.22);">
+    <div style="padding:20px 22px 0;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:.12em;color:#737373;margin-bottom:4px;">매거진 설정</div>
+        <div style="font-size:20px;font-weight:900;">매거진</div>
+      </div>
+      <button onclick="closeMagModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#737373;padding:4px;">✕</button>
+    </div>
+    <div style="padding:6px 22px 10px;font-size:12px;color:#737373;line-height:1.6;">매거진은 내 브랜드 템플릿이에요. 이름·핸들·멘트·색상·해시태그를 한 번 정해두면, 카드뉴스를 만들 때마다 자동으로 반영돼요. <span style="color:#8b5cf6;font-weight:700;">(브라우저에만 저장돼요.)</span></div>
+
+    <div style="padding:0 22px 22px;display:flex;flex-direction:column;gap:14px;">
+
+      <!-- 로고 -->
+      <div>
+        <div style="font-size:11px;font-weight:900;color:#737373;margin-bottom:6px;letter-spacing:.06em;">로고 이미지</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div id="mag-logo-preview" style="width:52px;height:52px;border-radius:50%;border:2px dashed #ddd;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:22px;background:#f5f5f7;flex-shrink:0;">📰</div>
+          <div style="flex:1;">
+            <input type="file" id="mag-logo-file" accept="image/*" style="display:none;" onchange="handleMagLogo(this)">
+            <button onclick="document.getElementById('mag-logo-file').click()" style="padding:7px 14px;border:1px solid var(--rule);border-radius:8px;background:#fff;font-size:12px;font-weight:800;cursor:pointer;margin-right:6px;">이미지 업로드</button>
+            <button onclick="clearMagLogo()" style="padding:7px 14px;border:1px solid var(--rule);border-radius:8px;background:#fff;font-size:12px;font-weight:800;cursor:pointer;color:#737373;">삭제</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 이름 -->
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">매거진 이름</label>
+        <input id="mag-name" type="text" placeholder="예: POPO LETTER" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+      </div>
+
+      <!-- 핸들 -->
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">핸들 (@ 계정명)</label>
+        <input id="mag-handle" type="text" placeholder="예: popo레터" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+      </div>
+
+      <!-- 멘트 -->
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">CTA 멘트 (마지막 카드 제목)</label>
+        <input id="mag-ment" type="text" placeholder="예: &quot;이거 왜 난리예요?&quot;" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+      </div>
+
+      <!-- CTA 본문 -->
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">CTA 본문</label>
+        <textarea id="mag-cta-body" rows="2" placeholder="예: 복잡한 이슈, 핵심만 쉽게&#10;한 장씩 넘기면 정리 끝" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;resize:vertical;box-sizing:border-box;"></textarea>
+      </div>
+
+      <!-- 강조색 -->
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">강조 색상</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="color" id="mag-accent" style="width:40px;height:36px;border:1px solid var(--rule);border-radius:8px;padding:2px;cursor:pointer;">
+          <span id="mag-accent-val" style="font-size:12px;color:#737373;"></span>
+        </div>
+      </div>
+
+      <!-- 해시태그 -->
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">기본 해시태그</label>
+        <input id="mag-hashtags" type="text" placeholder="예: #카드뉴스 #트렌드 #뉴스요약" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+        <div style="font-size:11px;color:#737373;margin-top:4px;">띄어쓰기로 구분해요.</div>
+      </div>
+
+      <!-- 저장 버튼 -->
+      <button onclick="applyMagSettings()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;margin-top:4px;">저장하기</button>
+    </div>
+  </div>
+</div>
+
 <div id="preview-modal" class="preview-modal">
   <div class="preview-box">
     <div class="preview-topbar">
@@ -534,8 +612,23 @@ var currentMode = 'article';
 var magSettings = {
   magName: 'POPO LETTER',
   magHandle: 'popo레터',
+  magMent: '"이거 왜 난리예요?"',
+  magCtaBody: '복잡한 이슈, 핵심만 쉽게\n한 장씩 넘기면 정리 끝',
+  magHashtags: '#카드뉴스 #트렌드 #뉴스요약',
+  magAccent: '#ff9ec7',
+  magLogo: '',
   palette: 'peach'
 };
+
+function saveMagSettings() {
+  try { localStorage.setItem('magazinie_mag', JSON.stringify(magSettings)); } catch(e) {}
+}
+function loadMagSettings() {
+  try {
+    var s = localStorage.getItem('magazinie_mag');
+    if (s) { var p = JSON.parse(s); for (var k in p) magSettings[k] = p[k]; }
+  } catch(e) {}
+}
 
 function $(id) { return document.getElementById(id); }
 function decodeHtml(v) { var ta = document.createElement('textarea'); ta.innerHTML = String(v || ''); return ta.value; }
@@ -640,6 +733,7 @@ function addTag(value) {
   if (!v) { showToast('키워드를 입력해 주세요.'); return; }
   if (!searchTags.includes(v)) searchTags.push(v);
   $('search-input').value = '';
+  loadMagSettings();
   renderSearchChips();
 }
 function removeTag(i) { searchTags.splice(i, 1); renderSearchChips(); }
@@ -773,7 +867,7 @@ async function generateFromArticle(index) {
     });
     if (token !== generationSeq) return;
     cards = normalizeArticleCards(data.cards || [], article);
-    lastSummary = data.summary || makeCaptionFromCards(cards, '#카드뉴스 #트렌드 #매거진');
+    lastSummary = data.summary || makeCaptionFromCards(cards, magSettings.magHashtags || '#카드뉴스 #트렌드 #매거진');
     cardImages = {}; cardStyles = {}; cardAlign = {};
     renderCards();
     var info = data.sourceInfo || {};
@@ -801,7 +895,7 @@ function normalizeArticleCards(rawCards, article) {
       var c = findRole(role) || arr[idx + 1] || {};
       return { label: 'CARD ' + String(idx + 1).padStart(2, '0'), role: role, title: clean(c.title || role), body: keepLine(c.body || ''), type: 'body' };
     }),
-    { label: 'ENDING', role: 'ENDING', title: clean(cta.title || '한 장씩 넘기면 정리 끝'), body: keepLine(cta.body || '복잡한 이슈, 핵심만 쉽게\n저장해두고 다시 확인해요.'), type: 'cta' }
+    { label: 'ENDING', role: 'ENDING', title: clean(cta.title || magSettings.magMent || '한 장씩 넘기면 정리 끝'), body: keepLine(cta.body || magSettings.magCtaBody || '복잡한 이슈, 핵심만 쉽게\n저장해두고 다시 확인해요.'), type: 'cta' }
   ].flat().map(sanitizeCard);
 }
 
@@ -1000,8 +1094,8 @@ function styleOf(i) {
     bg: i === 0 ? '#101010' : '#080808',
     title: '#ffffff',
     body: '#ffffff',
-    accent: '#ffffff',
-    size: i === 0 ? 31 : 18,
+    accent: magSettings.magAccent || '#ffffff',
+    size: i === 0 ? 26 : 22,
     overlay: i === 0 ? 68 : 66
   };
   return cardStyles[i];
@@ -1084,8 +1178,8 @@ function cardHtml(c, i) {
       + imageLayer(i, st)
       + '<div style="position:absolute;right:14px;top:14px;z-index:3;background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</div>'
       + '<div style="position:absolute;inset:0;padding:24px 20px 22px;display:flex;flex-direction:column;justify-content:center;text-align:' + textAlign + ';z-index:2;color:#fff">'
-      + '<div style="font-size:' + Math.max(17, st.size) + 'px;font-weight:950;line-height:1.35;letter-spacing:-.04em;color:' + st.title + ';white-space:pre-line;word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.22)">' + escapeHtml(c.title || '') + '</div>'
-      + '<div style="font-size:' + Math.max(12, st.size - 5) + 'px;color:' + st.body + ';line-height:1.7;white-space:pre-line;word-break:keep-all;margin-top:18px;font-weight:650;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.body || '') + '</div>'
+      + '<div style="font-size:' + st.size + 'px;font-weight:950;line-height:1.35;letter-spacing:-.04em;color:' + st.title + ';white-space:pre-line;word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.22)">' + escapeHtml(c.title || '') + '</div>'
+      + '<div style="font-size:' + Math.max(6, st.size - 5) + 'px;color:' + st.body + ';line-height:1.7;white-space:pre-line;word-break:keep-all;margin-top:18px;font-weight:650;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.body || '') + '</div>'
       + '<div style="margin-top:28px;font-size:10px;font-weight:900;color:rgba(255,255,255,.72)">@' + escapeHtml(magHandle.replace('@','')) + '</div>'
       + '</div></div>';
   }
@@ -1094,10 +1188,10 @@ function cardHtml(c, i) {
     + imageLayer(i, st)
     + '<div style="position:absolute;right:14px;top:14px;z-index:3;background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</div>'
     + '<div style="position:absolute;left:18px;right:18px;top:42px;text-align:' + textAlign + ';z-index:2">'
-    + '<div style="font-size:' + Math.max(14, st.size + 1) + 'px;line-height:1.35;font-weight:900;color:' + st.title + ';word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.25)">' + escapeHtml(c.title || '') + '</div>'
+    + '<div style="font-size:' + st.size + 'px;line-height:1.35;font-weight:900;color:' + st.title + ';word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.25)">' + escapeHtml(c.title || '') + '</div>'
     + '</div>'
     + '<div style="position:absolute;left:18px;right:18px;bottom:28px;text-align:' + textAlign + ';z-index:2">'
-    + '<div style="font-size:' + Math.max(11, st.size - 5) + 'px;line-height:1.72;font-weight:650;color:' + st.body + ';white-space:pre-line;word-break:keep-all;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.body || '') + '</div>'
+    + '<div style="font-size:' + Math.max(6, st.size - 4) + 'px;line-height:1.72;font-weight:650;color:' + st.body + ';white-space:pre-line;word-break:keep-all;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.body || '') + '</div>'
     + '</div>'
     + ''
     + '</div>';
@@ -1117,7 +1211,7 @@ function renderEdit(c, i) {
     + '<label class="color-item">강조 <input type="color" value="' + st.accent + '" onchange="setStyle(' + i + ',\'accent\',this.value)"></label>'
     + '<label class="color-item">본문 <input type="color" value="' + st.body + '" onchange="setStyle(' + i + ',\'body\',this.value)"></label>'
     + '</div>'
-    + '<div class="size-row">크기 <input type="range" min="12" max="40" value="' + st.size + '" oninput="setStyle(' + i + ',\'size\',this.value)"></div>'
+    + '<div class="size-row">크기 <input type="range" min="6" max="50" value="' + st.size + '" oninput="setStyle(' + i + ',\'size\',this.value)"></div>'
     + '<div class="size-row">어둡게 <input type="range" min="15" max="85" value="' + st.overlay + '" oninput="setStyle(' + i + ',\'overlay\',this.value)"></div>'
     + '<button type="button" class="btn apply" onclick="applyText(' + i + ')">텍스트 적용</button>';
   return div;
@@ -1164,57 +1258,15 @@ function copyCaption() {
 }
 
 /* 다운로드 */
-// 카드 한 장을 CSS scale로 고해상도 캡처 — 3:4 (1080×1350) 출력
+// 화면에 보이는 카드를 그대로 고해상도 캡처
 async function captureCardOffscreen(i) {
-  var BASE_W = 240;  // .card-wrap 원본 너비
-  var BASE_H = 240;  // .card-wrap 원본 높이
-  var OUT_W = 1080;
-  var OUT_H = 1350;  // 3:4 비율
-  var SCALE = OUT_W / BASE_W; // 4.5
-
-  var html = cardHtml(cards[i], i);
-
-  // 카드 원본(240×240)을 scale로 확대, 상하 여백은 배경색으로 채움
-  var st = styleOf(i);
-  var bg = st.bg || '#080808';
-  var scaledH = BASE_H * SCALE; // 1080px
-  var padV = (OUT_H - scaledH) / 2; // 위아래 각 135px 여백
-
-  var inner = document.createElement('div');
-  inner.style.cssText = 'width:' + BASE_W + 'px;height:' + BASE_H + 'px;transform-origin:top left;transform:scale(' + SCALE + ');border-radius:0;';
-  inner.innerHTML = html;
-  var cardEl = inner.firstChild;
-  if (cardEl) cardEl.style.borderRadius = '0';
-
-  var wrapper = document.createElement('div');
-  wrapper.style.cssText = [
-    'position:fixed',
-    'left:-' + (OUT_W + 100) + 'px',
-    'top:0',
-    'width:' + OUT_W + 'px',
-    'height:' + OUT_H + 'px',
-    'overflow:hidden',
-    'z-index:-1',
-    'background:' + bg,
-    'display:flex',
-    'align-items:center',
-    'justify-content:center'
-  ].join(';') + ';';
-  wrapper.appendChild(inner);
-  document.body.appendChild(wrapper);
-
-  try {
-    return await html2canvas(wrapper, {
-      scale: 1,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: null,
-      width: OUT_W,
-      height: OUT_H
-    });
-  } finally {
-    document.body.removeChild(wrapper);
-  }
+  var el = $('card-' + i);
+  return await html2canvas(el, {
+    scale: 4,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: null
+  });
 }
 
 async function downloadAll() {
@@ -1293,6 +1345,71 @@ function renderPreviewCard(idx) {
   $('preview-counter').textContent = (idx + 1) + ' / ' + cards.length;
 }
 function closePreviewModal() { $('preview-modal').style.display = 'none'; document.body.style.overflow = ''; }
+
+/* 매거진 설정 */
+function openMagModal() {
+  $('mag-name').value = magSettings.magName || '';
+  $('mag-handle').value = magSettings.magHandle || '';
+  $('mag-ment').value = magSettings.magMent || '';
+  $('mag-cta-body').value = magSettings.magCtaBody || '';
+  $('mag-hashtags').value = magSettings.magHashtags || '';
+  $('mag-accent').value = magSettings.magAccent || '#ff9ec7';
+  $('mag-accent-val').textContent = magSettings.magAccent || '#ff9ec7';
+  // 로고 미리보기
+  var prev = $('mag-logo-preview');
+  if (magSettings.magLogo) {
+    prev.innerHTML = '<img src="' + magSettings.magLogo + '" style="width:100%;height:100%;object-fit:cover;">';
+  } else {
+    prev.innerHTML = '📰';
+  }
+  $('mag-accent').oninput = function() { $('mag-accent-val').textContent = this.value; };
+  $('mag-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeMagModal() {
+  $('mag-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function handleMagLogo(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var src = e.target.result;
+    $('mag-logo-preview').innerHTML = '<img src="' + src + '" style="width:100%;height:100%;object-fit:cover;">';
+    magSettings.magLogo = src;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+function clearMagLogo() {
+  magSettings.magLogo = '';
+  $('mag-logo-preview').innerHTML = '📰';
+}
+function applyMagSettings() {
+  magSettings.magName = $('mag-name').value.trim() || magSettings.magName;
+  magSettings.magHandle = $('mag-handle').value.trim() || magSettings.magHandle;
+  magSettings.magMent = $('mag-ment').value.trim() || magSettings.magMent;
+  magSettings.magCtaBody = $('mag-cta-body').value || magSettings.magCtaBody;
+  magSettings.magHashtags = $('mag-hashtags').value.trim() || magSettings.magHashtags;
+  magSettings.magAccent = $('mag-accent').value || magSettings.magAccent;
+  saveMagSettings();
+  // 미리보기 핸들 업데이트
+  var handle = magSettings.magHandle.replace('@','');
+  if ($('preview-profile-name')) $('preview-profile-name').textContent = handle;
+  if ($('preview-profile-initial')) $('preview-profile-initial').textContent = handle.charAt(0).toUpperCase();
+  closeMagModal();
+  showToast('매거진 설정이 저장됐어요.');
+  // 카드가 있으면 CTA 카드 갱신
+  if (cards.length) {
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].type === 'cta') {
+        cards[i].title = magSettings.magMent || cards[i].title;
+        cards[i].body = magSettings.magCtaBody || cards[i].body;
+        rerenderCard(i);
+      }
+    }
+  }
+}
+
 
 function init() {
   // (Claude 직접 호출 제거 — Worker 경유로 전환됨)
