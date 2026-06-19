@@ -1278,15 +1278,19 @@ async function captureCardOffscreen(i) {
   }
   renderPreviewCard(i);
   await new Promise(function(r) { setTimeout(r, 120); });
-  // preview-card-area 전체를 캡처 → 미리보기에서 보이는 것과 완전히 동일
   var target = document.querySelector('.preview-card-area');
+  var tw = target.offsetWidth;
+  var th = target.offsetHeight;
+  // 미리보기에 보이는 것과 완전히 동일하게: windowWidth를 미리보기 박스 너비로 고정
   var canvas = await html2canvas(target, {
     scale: 3,
     useCORS: true,
     allowTaint: true,
     backgroundColor: null,
-    width: target.offsetWidth,
-    height: target.offsetHeight
+    width: tw,
+    height: th,
+    windowWidth: tw,
+    windowHeight: th
   });
   if (wasHidden) {
     modal.style.display = 'none';
