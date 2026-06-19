@@ -1362,7 +1362,14 @@ function renderPreviewCard(idx) {
   inner.style.cssText = 'width:' + BASE_W + 'px;height:' + BASE_H + 'px;transform-origin:top left;transform:scale(' + scale + ');flex-shrink:0;';
   inner.innerHTML = html;
   var cardEl = inner.firstChild;
-  if (cardEl) { cardEl.style.borderRadius = '0'; cardEl.style.height = BASE_H + 'px'; }
+  if (cardEl) {
+    cardEl.style.borderRadius = '0';
+    cardEl.style.width = BASE_W + 'px';
+    cardEl.style.height = BASE_H + 'px';
+    // 이미지도 card-inner 전체 높이에 맞게 늘리기
+    var imgEl = cardEl.querySelector('img');
+    if (imgEl) { imgEl.style.width = '100%'; imgEl.style.height = '100%'; imgEl.style.objectFit = 'cover'; }
+  }
 
   var wrapper = document.createElement('div');
   wrapper.style.cssText = 'width:' + boxW + 'px;height:' + boxH + 'px;overflow:hidden;flex-shrink:0;';
