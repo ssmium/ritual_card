@@ -1164,30 +1164,54 @@ function copyCaption() {
 }
 
 /* 다운로드 */
-// 카드 한 장을 오프스크린 1080px 크기로 렌더링 후 캡처 (폰트 크기 정확 반영)
+// 카드 한 장을 CSS scale로 고해상도 캡처 — 3:4 (1080×1350) 출력
 async function captureCardOffscreen(i) {
-  var RENDER_SIZE = 1080;
-  var scaleFactor = RENDER_SIZE / 240;
-  var st = styleOf(i);
+  var BASE_W = 240;  // .card-wrap 원본 너비
+  var BASE_H = 240;  // .card-wrap 원본 높이
+  var OUT_W = 1080;
+  var OUT_H = 1350;  // 3:4 비율
+  var SCALE = OUT_W / BASE_W; // 4.5
 
-  // 현재 st.size를 스케일 보정한 임시 스타일로 cardHtml 생성
-  var fakeStyles = {};
-  for (var k in st) fakeStyles[k] = st[k];
-  fakeStyles.size = Math.round(st.size * scaleFactor);
-
-  // cardStyles[i]를 임시 교체 → cardHtml 생성 → 원복
-  cardStyles[i] = fakeStyles;
   var html = cardHtml(cards[i], i);
-  cardStyles[i] = st;
+
+  // 카드 원본(240×240)을 scale로 확대, 상하 여백은 배경색으로 채움
+  var st = styleOf(i);
+  var bg = st.bg || '#080808';
+  var scaledH = BASE_H * SCALE; // 1080px
+  var padV = (OUT_H - scaledH) / 2; // 위아래 각 135px 여백
+
+  var inner = document.createElement('div');
+  inner.style.cssText = 'width:' + BASE_W + 'px;height:' + BASE_H + 'px;transform-origin:top left;transform:scale(' + SCALE + ');border-radius:0;';
+  inner.innerHTML = html;
+  var cardEl = inner.firstChild;
+  if (cardEl) cardEl.style.borderRadius = '0';
 
   var wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:' + RENDER_SIZE + 'px;height:' + RENDER_SIZE + 'px;overflow:hidden;z-index:-1;';
-  wrapper.innerHTML = html;
-  var inner = wrapper.firstChild;
-  if (inner) { inner.style.width = RENDER_SIZE + 'px'; inner.style.height = RENDER_SIZE + 'px'; inner.style.borderRadius = '0'; }
+  wrapper.style.cssText = [
+    'position:fixed',
+    'left:-' + (OUT_W + 100) + 'px',
+    'top:0',
+    'width:' + OUT_W + 'px',
+    'height:' + OUT_H + 'px',
+    'overflow:hidden',
+    'z-index:-1',
+    'background:' + bg,
+    'display:flex',
+    'align-items:center',
+    'justify-content:center'
+  ].join(';') + ';';
+  wrapper.appendChild(inner);
   document.body.appendChild(wrapper);
+
   try {
-    return await html2canvas(wrapper, { scale: 1, useCORS: true, allowTaint: true, backgroundColor: null, width: RENDER_SIZE, height: RENDER_SIZE });
+    return await html2canvas(wrapper, {
+      scale: 1,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null,
+      width: OUT_W,
+      height: OUT_H
+    });
   } finally {
     document.body.removeChild(wrapper);
   }
@@ -1247,19 +1271,21 @@ function renderPreviewCard(idx) {
   var imgBox = $('preview-card-img');
   imgBox.innerHTML = '';
 
+  // CSS scale로 240px 기준 카드를 박스 크기에 맞게 확대 (좌표 깨짐 없음)
   var boxSize = imgBox.offsetWidth || 360;
-  var scaleFactor = boxSize / 240;
-  var st = styleOf(idx);
-  var savedSize = st.size;
-  cardStyles[idx] = Object.assign({}, st, { size: Math.round(savedSize * scaleFactor) });
+  var BASE = 240;
+  var scale = boxSize / BASE;
+
   var html = cardHtml(cards[idx], idx);
-  cardStyles[idx] = st;
+  var inner = document.createElement('div');
+  inner.style.cssText = 'width:' + BASE + 'px;height:' + BASE + 'px;transform-origin:top left;transform:scale(' + scale + ');flex-shrink:0;';
+  inner.innerHTML = html;
+  var cardEl = inner.firstChild;
+  if (cardEl) cardEl.style.borderRadius = '0';
 
   var wrapper = document.createElement('div');
-  wrapper.style.cssText = 'width:' + boxSize + 'px;height:' + boxSize + 'px;flex-shrink:0;';
-  wrapper.innerHTML = html;
-  var inner = wrapper.firstChild;
-  if (inner) { inner.style.width = boxSize + 'px'; inner.style.height = boxSize + 'px'; inner.style.borderRadius = '0'; }
+  wrapper.style.cssText = 'width:' + boxSize + 'px;height:' + boxSize + 'px;overflow:hidden;flex-shrink:0;';
+  wrapper.appendChild(inner);
   imgBox.appendChild(wrapper);
 
   var dotEls = $('preview-dots').children;
