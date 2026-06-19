@@ -532,7 +532,7 @@ var modalArticleIndex = -1;
 var previewIndex = 0;
 var currentMode = 'article';
 var magSettings = {
-  magName: 'PUTPUT LETTER',
+  magName: 'POPO LETTER',
   magHandle: 'popo레터',
   palette: 'peach'
 };
@@ -958,7 +958,7 @@ function localLetterCards(topic, referenceText, tone, cardCount) {
 }
 function normalizeLetterCards(rawCards) {
   var arr = Array.isArray(rawCards) ? rawCards : [];
-  var magName = magSettings.magName || 'PUTPUT LETTER';
+  var magName = magSettings.magName || 'POPO LETTER';
 
   // 기사형 구조는 generateFromLetter에서 폐기합니다. 여기서는 순수 레터형 JSON만 변환합니다.
 
@@ -1061,7 +1061,7 @@ function cardHtml(c, i) {
   var st = styleOf(i), align = alignOf(i);
   var textAlign = align;
   if (align === 'center') textAlign = 'center';
-  var magName = c.magName || magSettings.magName || 'PUTPUT LETTER';
+  var magName = c.magName || magSettings.magName || 'POPO LETTER';
   var magHandle = magSettings.magHandle || 'popo레터';
   var counter = (i + 1) + '/' + cards.length;
 
@@ -1164,6 +1164,35 @@ function copyCaption() {
 }
 
 /* 다운로드 */
+// 카드 한 장을 오프스크린 1080px 크기로 렌더링 후 캡처 (폰트 크기 정확 반영)
+async function captureCardOffscreen(i) {
+  var RENDER_SIZE = 1080;
+  var scaleFactor = RENDER_SIZE / 240;
+  var st = styleOf(i);
+
+  // 현재 st.size를 스케일 보정한 임시 스타일로 cardHtml 생성
+  var fakeStyles = {};
+  for (var k in st) fakeStyles[k] = st[k];
+  fakeStyles.size = Math.round(st.size * scaleFactor);
+
+  // cardStyles[i]를 임시 교체 → cardHtml 생성 → 원복
+  cardStyles[i] = fakeStyles;
+  var html = cardHtml(cards[i], i);
+  cardStyles[i] = st;
+
+  var wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:' + RENDER_SIZE + 'px;height:' + RENDER_SIZE + 'px;overflow:hidden;z-index:-1;';
+  wrapper.innerHTML = html;
+  var inner = wrapper.firstChild;
+  if (inner) { inner.style.width = RENDER_SIZE + 'px'; inner.style.height = RENDER_SIZE + 'px'; inner.style.borderRadius = '0'; }
+  document.body.appendChild(wrapper);
+  try {
+    return await html2canvas(wrapper, { scale: 1, useCORS: true, allowTaint: true, backgroundColor: null, width: RENDER_SIZE, height: RENDER_SIZE });
+  } finally {
+    document.body.removeChild(wrapper);
+  }
+}
+
 async function downloadAll() {
   if (!cards.length) { showToast('먼저 카드를 생성해 주세요.'); return; }
   if (typeof JSZip === 'undefined' || typeof html2canvas === 'undefined') { showToast('다운로드 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'); return; }
@@ -1171,7 +1200,7 @@ async function downloadAll() {
   try {
     var zip = new JSZip();
     for (var i = 0; i < cards.length; i++) {
-      var canvas = await html2canvas($('card-' + i), { scale: 3, useCORS: true, allowTaint: true, backgroundColor: null });
+      var canvas = await captureCardOffscreen(i);
       var blob = await new Promise(function(resolve) { canvas.toBlob(resolve, 'image/png'); });
       zip.file('card_' + String(i + 1).padStart(2, '0') + '_' + cards[i].label + '.png', blob);
     }
