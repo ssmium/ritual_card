@@ -1261,12 +1261,22 @@ function copyCaption() {
 // 화면에 보이는 카드를 그대로 고해상도 캡처
 async function captureCardOffscreen(i) {
   var el = $('card-' + i);
-  return await html2canvas(el, {
-    scale: 4,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: null
-  });
+  var inner = el.querySelector('.card-inner');
+  var prevRadius = inner ? inner.style.borderRadius : '';
+  var prevElRadius = el.style.borderRadius;
+  if (inner) inner.style.borderRadius = '0';
+  el.style.borderRadius = '0';
+  try {
+    return await html2canvas(el, {
+      scale: 4,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null
+    });
+  } finally {
+    if (inner) inner.style.borderRadius = prevRadius;
+    el.style.borderRadius = prevElRadius;
+  }
 }
 
 async function downloadAll() {
