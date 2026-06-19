@@ -1164,9 +1164,10 @@ function cardHtml(c, i) {
   if (c.type === 'hook') {
     return '<div class="card-inner" style="background:' + st.bg + ';">'
       + imageLayer(i, st)
-      + '<div style="position:absolute;top:18px;left:0;right:0;text-align:center;z-index:2">'
-      + '<span style="display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 18px;border:1px solid rgba(255,255,255,.62);border-radius:999px;font-size:8px;color:rgba(255,255,255,.84);font-weight:900;letter-spacing:.06em">' + escapeHtml(magName.replace(' LETTER','')) + '</span></div>'
-      + '<div style="position:absolute;right:14px;top:14px;z-index:3;background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</div>'
+      + '<div style="position:absolute;top:14px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:3;">'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 14px;border:1px solid rgba(255,255,255,.62);border-radius:999px;font-size:8px;color:rgba(255,255,255,.84);font-weight:900;letter-spacing:.06em">' + escapeHtml(magName.replace(' LETTER','')) + '</span>'
+      + '<span style="background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</span>'
+      + '</div>'
       + '<div style="position:absolute;left:18px;right:18px;bottom:30px;text-align:' + textAlign + ';z-index:2">'
       + '<div style="font-size:' + (st.titleSize||st.size) + 'px;line-height:1.22;font-weight:950;letter-spacing:-.06em;word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.25)">' + renderHookTitle(c.title, st.title, st.accent) + '</div>'
 
@@ -1178,8 +1179,11 @@ function cardHtml(c, i) {
   if (c.type === 'cta') {
     return '<div class="card-inner" style="background:' + st.bg + ';">'
       + imageLayer(i, st)
-      + '<div style="position:absolute;right:14px;top:14px;z-index:3;background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</div>'
-      + '<div style="position:absolute;inset:0;padding:24px 20px 22px;display:flex;flex-direction:column;justify-content:center;text-align:' + textAlign + ';z-index:2;color:#fff">'
+      + '<div style="position:absolute;top:14px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:3;">'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 14px;border:1px solid rgba(255,255,255,.62);border-radius:999px;font-size:8px;color:rgba(255,255,255,.84);font-weight:900;letter-spacing:.06em">' + escapeHtml(magName.replace(' LETTER','')) + '</span>'
+      + '<span style="background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</span>'
+      + '</div>'
+      + '<div style="position:absolute;inset:0;padding:50px 20px 22px;display:flex;flex-direction:column;justify-content:center;text-align:' + textAlign + ';z-index:2;color:#fff">'
       + '<div style="font-size:' + (st.titleSize||st.size) + 'px;font-weight:950;line-height:1.35;letter-spacing:-.04em;color:' + st.title + ';white-space:pre-line;word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.22)">' + escapeHtml(c.title || '') + '</div>'
       + '<div style="font-size:' + (st.bodySize||Math.max(6,st.size-5)) + 'px;color:' + st.body + ';line-height:1.7;white-space:pre-line;word-break:keep-all;margin-top:18px;font-weight:650;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.body || '') + '</div>'
       + '<div style="margin-top:28px;font-size:10px;font-weight:900;color:rgba(255,255,255,.72)">@' + escapeHtml(magHandle.replace('@','')) + '</div>'
@@ -1188,8 +1192,11 @@ function cardHtml(c, i) {
 
   return '<div class="card-inner" style="background:' + st.bg + ';">'
     + imageLayer(i, st)
-    + '<div style="position:absolute;right:14px;top:14px;z-index:3;background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</div>'
-    + '<div style="position:absolute;left:18px;right:18px;top:42px;text-align:' + textAlign + ';z-index:2">'
+    + '<div style="position:absolute;top:14px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:3;">'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 14px;border:1px solid rgba(255,255,255,.62);border-radius:999px;font-size:8px;color:rgba(255,255,255,.84);font-weight:900;letter-spacing:.06em">' + escapeHtml(magName.replace(' LETTER','')) + '</span>'
+      + '<span style="background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</span>'
+      + '</div>'
+    + '<div style="position:absolute;left:18px;right:18px;top:50px;text-align:' + textAlign + ';z-index:2">'
     + '<div style="font-size:' + (st.titleSize||st.size) + 'px;line-height:1.35;font-weight:900;color:' + st.title + ';word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.25)">' + escapeHtml(c.title || '') + '</div>'
     + '</div>'
     + '<div style="position:absolute;left:18px;right:18px;bottom:28px;text-align:' + textAlign + ';z-index:2">'
