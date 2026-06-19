@@ -1263,22 +1263,23 @@ function copyCaption() {
 /* 다운로드 */
 // 화면에 보이는 카드를 그대로 고해상도 캡처
 async function captureCardOffscreen(i) {
-  // 화면 카드(240×240)를 3:4(1080×1350) 이미지로 캡처
+  // 카드 이미지 원본 비율 감지 → 이미지 있으면 3:4, 없으면 1:1
   var el = $('card-' + i);
   var inner = el.querySelector('.card-inner');
   var st = styleOf(i);
   var bg = st.bg || '#080808';
+  var img = cardImages[i];
 
-  var OUT_W = 1080, OUT_H = 1350;
-  var SCALE = OUT_W / 240; // 4.5
+  var OUT_W = 1080;
+  var OUT_H = img ? 1350 : 1080; // 이미지 있으면 3:4, 없으면 1:1
+  var CARD_SIZE = 240;
+  var SCALE = OUT_W / CARD_SIZE; // 4.5
 
   // border-radius 제거
   var prevRadius = inner ? inner.style.borderRadius : '';
-  var prevElRadius = el.style.borderRadius;
   if (inner) inner.style.borderRadius = '0';
-  el.style.borderRadius = '0';
 
-  // 카드를 scale로 확대한 wrapper 생성 (위아래 여백 배경색으로 채움)
+  // 오프스크린 wrapper
   var wrapper = document.createElement('div');
   wrapper.style.cssText = [
     'position:fixed', 'left:-' + (OUT_W + 200) + 'px', 'top:0',
@@ -1287,12 +1288,36 @@ async function captureCardOffscreen(i) {
     'display:flex', 'align-items:center', 'justify-content:center'
   ].join(';') + ';';
 
-  var scaled = document.createElement('div');
-  scaled.style.cssText = 'width:240px;height:240px;transform-origin:center center;transform:scale(' + SCALE + ');flex-shrink:0;border-radius:0;';
-  scaled.innerHTML = el.outerHTML.replace(/id="card-\d+"/, 'id="card-capture"');
-  var scaledInner = scaled.querySelector('.card-inner');
-  if (scaledInner) scaledInner.style.borderRadius = '0';
+  // 이미지가 있으면 배경 이미지로 전체 채우기
+  if (img) {
+    var bgLayer = document.createElement('div');
+    bgLayer.style.cssText = 'position:absolute;inset:0;background:url(' + img + ') center/cover no-repeat;';
+    wrapper.appendChild(bgLayer);
+    var overlayLayer = document.createElement('div');
+    overlayLayer.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,' + (st.overlay / 100) + ');';
+    wrapper.appendChild(overlayLayer);
+  }
 
+  // 카드 텍스트 레이어만 scale로 올리기
+  var scaled = document.createElement('div');
+  scaled.style.cssText = 'position:relative;width:' + CARD_SIZE + 'px;height:' + CARD_SIZE + 'px;transform-origin:center center;transform:scale(' + SCALE + ');flex-shrink:0;';
+  // 이미지 없는 경우만 카드 전체 복사, 있으면 텍스트 레이어만
+  var clone = el.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.style.cssText = 'width:' + CARD_SIZE + 'px;height:' + CARD_SIZE + 'px;border-radius:0;';
+  var cloneInner = clone.querySelector('.card-inner');
+  if (cloneInner) {
+    cloneInner.style.borderRadius = '0';
+    if (img) {
+      // 이미지/오버레이 레이어 제거 (배경은 wrapper에서 처리)
+      var imgEl = cloneInner.querySelector('img');
+      var overlayEl = cloneInner.querySelector('div[style*="rgba(0,0,0"]');
+      if (imgEl) imgEl.remove();
+      if (overlayEl) overlayEl.remove();
+      cloneInner.style.background = 'transparent';
+    }
+  }
+  scaled.appendChild(clone);
   wrapper.appendChild(scaled);
   document.body.appendChild(wrapper);
 
@@ -1304,7 +1329,6 @@ async function captureCardOffscreen(i) {
   } finally {
     document.body.removeChild(wrapper);
     if (inner) inner.style.borderRadius = prevRadius;
-    el.style.borderRadius = prevElRadius;
   }
 }
 
