@@ -1270,23 +1270,24 @@ function copyCaption() {
 /* 다운로드 */
 // 화면에 보이는 카드를 그대로 고해상도 캡처
 async function captureCardOffscreen(i) {
-  // 미리보기 모달을 잠깐 열어서 해당 카드 렌더링 후 캡처
   var modal = $('preview-modal');
   var wasHidden = modal.style.display === 'none' || !modal.style.display;
-  // 미리보기 카드 렌더링
   if (wasHidden) {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
   }
   renderPreviewCard(i);
-  // 레이아웃 안정화 대기
-  await new Promise(function(r) { setTimeout(r, 80); });
+  await new Promise(function(r) { setTimeout(r, 120); });
+  // preview-card-img 안의 실제 렌더된 wrapper(첫번째 자식)를 캡처
   var area = $('preview-card-img');
-  var canvas = await html2canvas(area, {
+  var target = area.firstChild || area;
+  var canvas = await html2canvas(target, {
     scale: 3,
     useCORS: true,
     allowTaint: true,
-    backgroundColor: null
+    backgroundColor: null,
+    width: target.offsetWidth,
+    height: target.offsetHeight
   });
   if (wasHidden) {
     modal.style.display = 'none';
