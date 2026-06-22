@@ -379,7 +379,7 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
     <!-- 레터 만들기 -->
     <section id="letter-panel" class="workspace-card mode-panel">
       <div class="panel-title">레터 만들기</div>
-      <div class="panel-hint">기사 요약이 아니라, 주제를 바탕으로 popo레터 같은 감성 정보형 카드뉴스를 만들어요. Gemini로 생성하고, 용량 초과 시 Claude로 자동 전환돼요.</div>
+      <div class="panel-hint">기사 요약이 아니라, 주제를 바탕으로 popo레터 같은 감성 정보형 카드뉴스를 만들어요. AI가 주제에 맞춰 레터형 카드뉴스 문구를 생성해요.</div>
 
       <div class="form-grid">
         <div class="form-field">
@@ -917,8 +917,8 @@ async function generateFromLetter() {
 
   var token = ++generationSeq;
   $('cards-panel').style.display = 'block';
-  setStatus('warn', 'Gemini로 레터 문구 생성 중: ' + clip(topic, 54));
-  showLoading('Gemini로 레터 카드뉴스를 쓰고 있어요...');
+setStatus('warn', 'AI로 레터 문구 생성 중: ' + clip(topic, 54));
+showLoading('AI로 레터 카드뉴스를 쓰고 있어요...');
 
   try {
     var result = await callWorkerForLetter(topic, referenceText, tone, cardCount);
@@ -1075,14 +1075,62 @@ function sanitizeCard(card) {
 }
 function sanitizeLetterText(text) {
   var s = String(text || '');
-  FORBIDDEN_LETTER_WORDS.forEach(function(w) { s = s.split(w).join(''); });
+
+  // 레터/카드 공통 금지어 제거
+  FORBIDDEN_LETTER_WORDS.forEach(function(w) {
+    s = s.split(w).join('');
+  });
+
+  // 기사 수집 실패/검색 설명/사이트 UI 문구 제거
+  var noisePatterns = [
+    /본문\s*수집\s*불가[^.!?\n。]{0,160}/g,
+    /원문\s*확인\s*필요[^.!?\n。]{0,160}/g,
+    /검색\s*결과\s*설명[^.!?\n。]{0,180}/g,
+    /카드뉴스용\s*요약을\s*안정적으로\s*만들기\s*어렵습니다/g,
+
+    /스크롤[^.!?\n。]{0,80}/g,
+    /상태바[^.!?\n。]{0,80}/g,
+    /화면\s*이동[^.!?\n。]{0,80}/g,
+    /페이지\s*이동[^.!?\n。]{0,80}/g,
+    /버튼[^.!?\n。]{0,60}/g,
+
+    /관련기사[^.!?\n。]{0,120}/g,
+    /추천기사[^.!?\n。]{0,120}/g,
+    /많이\s*본\s*뉴스[^.!?\n。]{0,120}/g,
+    /랭킹뉴스[^.!?\n。]{0,120}/g,
+    /공유하기[^.!?\n。]{0,80}/g,
+    /댓글\s*\d*[^.!?\n。]{0,80}/g,
+    /광고[^.!?\n。]{0,80}/g,
+    /구독[^.!?\n。]{0,80}/g,
+
+    /무단전재[^.!?\n。]{0,160}/g,
+    /재배포\s*금지[^.!?\n。]{0,160}/g,
+    /저작권자[^.!?\n。]{0,160}/g,
+    /Copyright[^.!?\n。]{0,200}/gi,
+
+    /[가-힣]{2,5}\s*기자\s*[\w.%-]+@[\w.-]+/g,
+    /[가-힣]{2,5}\s*기자/g,
+    /입력\s*\d{4}[.\/-]\d{1,2}[.\/-]\d{1,2}[^.!?\n。]{0,120}/g,
+    /수정\s*\d{4}[.\/-]\d{1,2}[.\/-]\d{1,2}[^.!?\n。]{0,120}/g
+  ];
+
+  noisePatterns.forEach(function(pattern) {
+    s = s.replace(pattern, ' ');
+  });
+
+  // 말투 정리
   s = s.replace(/\s+것입니다\.?/g, ' 좋아요.');
   s = s.replace(/\s+수 있습니다\.?/g, ' 수 있어요.');
   s = s.replace(/\s+합니다\.?/g, '해요.');
   s = s.replace(/\s+하세요\.?/g, '해보는 건 어때요?');
-  return s.replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-}
 
+  return s
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
 /* 카드 렌더링 */
 function setStatus(type, msg) {
   var el = $('source-status');
