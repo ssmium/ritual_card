@@ -124,7 +124,7 @@ button { cursor: pointer; }
 
 /* 메인 */
 .app-content { margin-left: 232px; min-height: 100vh; display: flex; flex-direction: column; background: #fff; }
-.app-content .wrap { max-width: 1180px; padding: 44px 56px 80px; width: 100%; }
+.app-content .wrap { max-width: 1180px; padding: 44px 56px 120px; width: 100%; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
 .section-label { font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
 h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
@@ -202,14 +202,58 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
 .results { display: none; }
 .result-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #737373; font-size: 13px; margin-bottom: 12px; }
 .article-list { display: grid; gap: 8px; }
-.article { display: grid; grid-template-columns: 54px 1fr auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; cursor: pointer; transition: border-color .12s, box-shadow .12s, transform .12s; }
+.article { display: grid; grid-template-columns: 54px 1fr auto auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; cursor: pointer; transition: border-color .12s, box-shadow .12s, transform .12s; }
 .article:hover, .article.selected { border-color: #111; box-shadow: rgba(20,16,25,.13) 0 12px 28px -20px; transform: translateY(-1px); }
+.article.in-basket { border-color: #b9a3f5; background: linear-gradient(120deg,rgba(255,158,199,.04),rgba(185,163,245,.06)); }
 .thumb { width: 54px; height: 50px; border-radius: 8px; background: linear-gradient(140deg,rgba(255,158,199,.2),rgba(185,163,245,.22)); display: flex; align-items: center; justify-content: center; font-size: 20px; }
 .article-info { min-width: 0; }
 .article-title { font-size: 13px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
 .article-sub, .article-desc { font-size: 11px; color: #737373; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .article-sub { margin-bottom: 3px; }
 .article button { white-space: nowrap; }
+
+/* 바구니 */
+.basket-card {
+  display: none;
+  background: #fff;
+  border: 1px solid #b9a3f5;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  background: linear-gradient(120deg,rgba(255,158,199,.04),rgba(185,163,245,.07));
+}
+.basket-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 7px;
+}
+.basket-item:last-child { margin-bottom: 0; }
+.basket-item-title { flex: 1; font-size: 13px; font-weight: 700; color: #141019; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.basket-item-del { background: none; border: none; color: #aaa; font-size: 16px; cursor: pointer; padding: 0 4px; flex-shrink: 0; line-height: 1; }
+.basket-item-del:hover { color: #d93838; }
+
+/* 다이제스트 플로팅 바 */
+.digest-bar {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111;
+  border-radius: 999px;
+  padding: 10px 16px 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0,0,0,.28);
+  white-space: nowrap;
+}
+.digest-bar.hidden { display: none; }
 
 /* 카드 패널 */
 .cards-panel { display: none; }
@@ -253,6 +297,7 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
 .btn.ghost:hover { border-color: var(--ink); opacity: 1; }
 .btn.soft { background: #f5f5f5; color: #111; border-color: #ebebeb; }
 .btn.danger { background: #fff; color: var(--danger); border-color: #f2caca; }
+.btn.accent { background: linear-gradient(135deg,var(--g1),var(--g2)); border-color: transparent; color: #111; }
 
 /* 모달 */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9000; display: none; align-items: center; justify-content: center; padding: 24px; }
@@ -303,8 +348,9 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
   .card-wrap, .img-btn, .align-row { width: 220px; }
   .card-wrap { height: 293px; }
   .edit-panel { width: 220px; min-width: 220px; }
-  .article { grid-template-columns: 46px 1fr; }
-  .article button { grid-column: 1/-1; }
+  .article { grid-template-columns: 46px 1fr auto; }
+  .article button.basket-btn { grid-column: 3; }
+  .article button.view-btn { grid-column: 1/-1; }
   .thumb { width: 46px; height: 44px; }
   .search-bar { display: block; }
   .search-bar .btn { width: 100%; margin-top: 10px; }
@@ -357,7 +403,7 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
     <!-- 기사로 만들기 -->
     <section id="article-panel" class="workspace-card mode-panel active">
       <div class="panel-title">기사로 만들기</div>
-      <div class="panel-hint">네이버 뉴스 검색 결과를 불러오고, 선택한 기사 본문을 기준으로 카드뉴스를 생성해요.</div>
+      <div class="panel-hint">네이버 뉴스 검색 결과를 불러오고, 선택한 기사 본문을 기준으로 카드뉴스를 생성해요. 기사를 여러 개 담아두고 다이제스트로 한번에 만들 수도 있어요.</div>
 
       <div class="search-bar">
         <div class="search-input-wrap">
@@ -410,8 +456,10 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
         <textarea id="letter-reference" placeholder="예: 이번 주말, 모르고 지나가기엔 너무 아까운 시간을 잘 보내는 방법. 다정하고 가볍게 제안하는 느낌."></textarea>
       </div>
 
-      <button type="button" class="btn" onclick="generateFromLetter()">레터 카드뉴스 만들기</button>
-      <button type="button" class="btn ghost" onclick="fillLetterSample()">예시 채우기</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+        <button type="button" class="btn" onclick="generateFromLetter()">레터 카드뉴스 만들기</button>
+        <button type="button" class="btn ghost" onclick="fillLetterSample()">예시 채우기</button>
+      </div>
     </section>
 
     <!-- 검색 결과 -->
@@ -421,6 +469,22 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
         <span><span id="result-count">0</span>건</span>
       </div>
       <div id="article-list" class="article-list"></div>
+    </section>
+
+    <!-- 기사 보관함 -->
+    <section id="basket-panel" class="basket-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px;">
+          📌 기사 보관함
+          <span id="basket-count" style="display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#111;color:#fff;font-size:11px;font-weight:800;">0</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn ghost" style="font-size:12px;padding:7px 12px;" onclick="clearBasket()">비우기</button>
+          <button class="btn accent" onclick="generateDigest()">다이제스트 만들기 →</button>
+        </div>
+      </div>
+      <div id="basket-items"></div>
+      <div style="font-size:11px;color:#a0a0b8;margin-top:10px;">기사 2개 이상 담으면 다이제스트를 만들 수 있어요. 검색 키워드를 바꿔도 보관함은 유지돼요.</div>
     </section>
 
     <!-- 카드 패널 -->
@@ -448,6 +512,13 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
   </div>
 </main>
 
+<!-- 다이제스트 플로팅 바 -->
+<div id="digest-bar" class="digest-bar hidden">
+  <span id="digest-bar-count" style="color:rgba(255,255,255,.7);font-size:12px;font-weight:700;">0개 선택됨</span>
+  <button class="btn" style="background:#fff;color:#111;border-color:#fff;padding:8px 16px;border-radius:999px;" onclick="generateDigest()">다이제스트 만들기 →</button>
+  <button style="background:transparent;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.65);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:700;" onclick="clearBasket()">선택 해제</button>
+</div>
+
 <!-- 기사 미리보기 모달 -->
 <div id="article-modal" class="modal-overlay" onclick="closeArticleModal(event)">
   <div class="modal-box">
@@ -466,12 +537,12 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
     </div>
     <div class="modal-foot">
       <button type="button" class="btn ghost" onclick="closeArticleModal()">닫기</button>
+      <button type="button" class="btn ghost" id="modal-basket-btn" onclick="toggleBasketFromModal()">📌 보관함에 담기</button>
       <button type="button" class="btn" id="modal-generate-btn" onclick="generateFromModal()">이 기사로 카드뉴스 만들기 →</button>
     </div>
   </div>
 </div>
 
-<!-- 인스타 미리보기 모달 -->
 <!-- 매거진 설정 모달 -->
 <div id="mag-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9600;align-items:center;justify-content:center;padding:16px;">
   <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.22);">
@@ -485,8 +556,6 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
     <div style="padding:6px 22px 10px;font-size:12px;color:#737373;line-height:1.6;">매거진은 내 브랜드 템플릿이에요. 이름·핸들·멘트·색상·해시태그를 한 번 정해두면, 카드뉴스를 만들 때마다 자동으로 반영돼요. <span style="color:#8b5cf6;font-weight:700;">(브라우저에만 저장돼요.)</span></div>
 
     <div style="padding:0 22px 22px;display:flex;flex-direction:column;gap:14px;">
-
-      <!-- 로고 -->
       <div>
         <div style="font-size:11px;font-weight:900;color:#737373;margin-bottom:6px;letter-spacing:.06em;">로고 이미지</div>
         <div style="display:flex;align-items:center;gap:12px;">
@@ -498,32 +567,22 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
           </div>
         </div>
       </div>
-
-      <!-- 이름 -->
       <div>
         <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">매거진 이름</label>
         <input id="mag-name" type="text" placeholder="예: POPO LETTER" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
       </div>
-
-      <!-- 핸들 -->
       <div>
         <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">핸들 (@ 계정명)</label>
         <input id="mag-handle" type="text" placeholder="예: popo레터" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
       </div>
-
-      <!-- 멘트 -->
       <div>
         <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">CTA 멘트 (마지막 카드 제목)</label>
-        <input id="mag-ment" type="text" placeholder="예: &quot;이거 왜 난리예요?&quot;" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+        <input id="mag-ment" type="text" placeholder='예: "이거 왜 난리예요?"' style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
       </div>
-
-      <!-- CTA 본문 -->
       <div>
         <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">CTA 본문</label>
         <textarea id="mag-cta-body" rows="2" placeholder="예: 복잡한 이슈, 핵심만 쉽게&#10;한 장씩 넘기면 정리 끝" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;resize:vertical;box-sizing:border-box;"></textarea>
       </div>
-
-      <!-- 강조색 -->
       <div>
         <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">강조 색상</label>
         <div style="display:flex;align-items:center;gap:10px;">
@@ -531,15 +590,11 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
           <span id="mag-accent-val" style="font-size:12px;color:#737373;"></span>
         </div>
       </div>
-
-      <!-- 해시태그 -->
       <div>
         <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">기본 해시태그</label>
         <input id="mag-hashtags" type="text" placeholder="예: #카드뉴스 #트렌드 #뉴스요약" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
         <div style="font-size:11px;color:#737373;margin-top:4px;">띄어쓰기로 구분해요.</div>
       </div>
-
-      <!-- 저장 버튼 -->
       <button onclick="applyMagSettings()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;margin-top:4px;">저장하기</button>
     </div>
   </div>
@@ -582,14 +637,7 @@ h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-/*
-  연결 정보
-  - 네이버 뉴스 검색/기사 수집/기사형 AI 생성은 아래 Cloudflare Worker로 호출합니다.
-  - 레터 만들기는 Claude API를 직접 호출합니다.
-  - 레터 만들기에서는 기사 생성 API(/generate-cardnews)를 사용하지 않습니다.
-*/
 const WORKER_API_BASE = 'https://wispy-mountain-4c30.yjuio9603.workers.dev';
-// AI 생성은 Worker(/generate-letter, /generate-cardnews) 경유 — Gemini 1순위, 용량 초과 시 Claude 자동 전환
 const SUGGEST_DEFAULT = ['뷰티','화장품','올리브영','장원영','무신사','패션','스타일','팝업','트렌드','서울'];
 const FORBIDDEN_LETTER_WORDS = [
   '이 기사는', '본 기사는', '독자들이', '도움을 줄 것입니다', '도움을 줄 수 있습니다',
@@ -598,6 +646,7 @@ const FORBIDDEN_LETTER_WORDS = [
 
 var searchTags = [];
 var currentArticles = [];
+var savedArticles = [];   // 바구니
 var selectedArticleIndex = -1;
 var cards = [];
 var cardImages = {};
@@ -632,8 +681,8 @@ function loadMagSettings() {
 
 function $(id) { return document.getElementById(id); }
 function decodeHtml(v) { var ta = document.createElement('textarea'); ta.innerHTML = String(v || ''); return ta.value; }
-function clean(v) { return decodeHtml(String(v || '')).replace(/<[^>]+>/g, ' ').replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/\s+/g, ' ').trim(); }
-function keepLine(v) { return decodeHtml(String(v || '')).replace(/<[^>]+>/g, ' ').replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim(); }
+function clean(v) { return decodeHtml(String(v || '')).replace(/<[^>]+>/g, ' ').replace(/[""]/g, '"').replace(/['']/g, "'").replace(/\s+/g, ' ').trim(); }
+function keepLine(v) { return decodeHtml(String(v || '')).replace(/<[^>]+>/g, ' ').replace(/[""]/g, '"').replace(/['']/g, "'").replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim(); }
 function escapeHtml(v) { return String(v || '').replace(/[&<>"']/g, function(s) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s]; }); }
 function clip(v, max) { var s = clean(v); return s.length > max ? s.slice(0, max - 1).replace(/\s+\S*$/, '') + '…' : s; }
 function showToast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2400); }
@@ -693,7 +742,7 @@ function isNewsStyleCards(arr) {
   }).join(' ').toUpperCase();
   return /NOW TRENDING|CONTEXT|THE TAKEAWAY|WHAT'S NEXT|WHY IT MATTERS|뉴스|기사|독자들이|도움을 줄 것입니다/.test(joined);
 }
-// Worker 경유로 Gemini → Claude 폴백 레터 생성
+
 async function callWorkerForLetter(topic, referenceText, tone, cardCount) {
   var data = await workerApiJson('/generate-letter', {
     method: 'POST',
@@ -717,7 +766,137 @@ async function checkWorkerHealth(toast) {
   }
 }
 
-/* 검색 */
+/* ===== 바구니 ===== */
+function isInBasket(article) {
+  return savedArticles.some(function(a) { return a.url === article.url; });
+}
+
+function toggleBasket(article) {
+  if (isInBasket(article)) {
+    savedArticles = savedArticles.filter(function(a) { return a.url !== article.url; });
+    showToast('보관함에서 제거했어요.');
+  } else {
+    if (savedArticles.length >= 5) { showToast('최대 5개까지 담을 수 있어요.'); return; }
+    savedArticles.push(article);
+    showToast('📌 보관함에 담았어요! (' + savedArticles.length + '개)');
+  }
+  renderArticles();
+  renderBasket();
+}
+
+function clearBasket() {
+  savedArticles = [];
+  renderArticles();
+  renderBasket();
+  showToast('보관함을 비웠어요.');
+}
+
+function removeBasketItem(i) {
+  savedArticles.splice(i, 1);
+  renderArticles();
+  renderBasket();
+}
+
+function renderBasket() {
+  var panel = $('basket-panel');
+  var countEl = $('basket-count');
+  var itemsEl = $('basket-items');
+  var bar = $('digest-bar');
+  var n = savedArticles.length;
+  countEl.textContent = n;
+  if (n === 0) {
+    panel.style.display = 'none';
+    if (bar) bar.classList.add('hidden');
+    return;
+  }
+  panel.style.display = 'block';
+  if (bar) {
+    bar.classList.remove('hidden');
+    $('digest-bar-count').textContent = n + '개 선택됨';
+  }
+  itemsEl.innerHTML = savedArticles.map(function(a, i) {
+    return '<div class="basket-item">'
+      + '<span class="basket-item-title">' + escapeHtml(a.title) + '</span>'
+      + '<span style="font-size:11px;color:#aaa;white-space:nowrap;flex-shrink:0;">' + escapeHtml(a.domain || '') + '</span>'
+      + '<button class="basket-item-del" onclick="removeBasketItem(' + i + ')" title="제거">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+function toggleBasketFromModal() {
+  var article = currentArticles[modalArticleIndex];
+  if (!article) return;
+  toggleBasket(article);
+  updateModalBasketBtn();
+}
+
+function updateModalBasketBtn() {
+  var btn = $('modal-basket-btn');
+  if (!btn) return;
+  var article = currentArticles[modalArticleIndex];
+  if (!article) return;
+  if (isInBasket(article)) {
+    btn.textContent = '📌 보관함에서 빼기';
+    btn.style.borderColor = '#b9a3f5';
+    btn.style.color = '#6f4fe8';
+  } else {
+    btn.textContent = '📌 보관함에 담기';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}
+
+/* ===== 다이제스트 ===== */
+function normalizeDigestCards(rawCards) {
+  var magName = magSettings.magName || 'POPO LETTER';
+  return rawCards.map(function(c) {
+    if (c.type === 'digest-cover' || c.type === 'cover') {
+      return { label: c.label || 'COVER', type: 'hook', title: keepLine(c.title || '이주의\n뉴스'), body: c.body || '', magName: magName };
+    }
+    return {
+      label: c.label || 'CARD',
+      type: 'body',
+      role: c.label || 'DIGEST',
+      title: clean(c.headline || c.title || ''),
+      body: keepLine(c.body || '')
+    };
+  });
+}
+
+async function generateDigest() {
+  if (savedArticles.length < 2) { showToast('기사를 2개 이상 담아주세요.'); return; }
+  var token = ++generationSeq;
+  $('cards-panel').style.display = 'block';
+  setStatus('warn', '보관함 기사 ' + savedArticles.length + '건 AI 요약 중...');
+  showLoading('다이제스트 카드뉴스 만드는 중...');
+  try {
+    var data = await workerApiJson('/generate-digest', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ articles: savedArticles }),
+      timeout: 120000
+    });
+    if (token !== generationSeq) return;
+    if (!data.cards || !data.cards.length) throw new Error('다이제스트 카드가 비어있어요.');
+    cards = normalizeDigestCards(data.cards).map(sanitizeCard);
+    lastSummary = {
+      caption: '이번 주 주요 뉴스 ' + savedArticles.length + '건 모아봤어요 📰\n\n' + savedArticles.map(function(a) { return '· ' + a.title; }).join('\n'),
+      hashtags: ['#이주의뉴스', '#카드뉴스', '#다이제스트', '#뉴스요약']
+    };
+    cardImages = {}; cardStyles = {}; cardAlign = {};
+    renderCards();
+    setStatus('ok', '다이제스트 카드뉴스 생성 완료 — ' + savedArticles.length + '건');
+    setTimeout(function() { $('cards-panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+    showToast('다이제스트 카드뉴스를 만들었어요!');
+  } catch(e) {
+    setStatus('warn', e.message || '다이제스트 생성 실패');
+    showToast(e.message || '다이제스트 생성 실패');
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ===== 검색 ===== */
 function renderSearchChips() {
   $('search-chips').innerHTML = searchTags.map(function(t, i) {
     return '<span class="chip">' + escapeHtml(t) + '<em class="chip-x" onclick="removeTag(' + i + ')">×</em></span>';
@@ -784,17 +963,19 @@ function renderArticles() {
     if (a.pubDate) {
       try { date = new Date(a.pubDate).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch(e) {}
     }
+    var inBasket = isInBasket(a);
     var div = document.createElement('div');
-    div.className = 'article' + (selectedArticleIndex === i ? ' selected' : '');
-    div.innerHTML = '<div class="thumb">📰</div>'
+    div.className = 'article' + (selectedArticleIndex === i ? ' selected' : '') + (inBasket ? ' in-basket' : '');
+    div.innerHTML = '<div class="thumb">' + (inBasket ? '📌' : '📰') + '</div>'
       + '<div class="article-info">'
       + '<div class="article-title">' + escapeHtml(a.title) + '</div>'
       + '<div class="article-sub">' + escapeHtml(date) + ' · ' + escapeHtml(a.domain || '') + '</div>'
       + '<div class="article-desc">' + escapeHtml(a.desc || '기사 설명 없음') + '</div>'
       + '</div>'
-      + '<button type="button" class="btn">본문 보기</button>';
+      + '<button type="button" class="btn ghost basket-btn" style="font-size:12px;padding:7px 10px;" onclick="event.stopPropagation();toggleBasket(currentArticles[' + i + '])">'
+      + (inBasket ? '담김 ✓' : '+ 담기') + '</button>'
+      + '<button type="button" class="btn view-btn" style="font-size:12px;padding:7px 10px;" onclick="event.stopPropagation();openArticleModal(' + i + ')">본문 보기</button>';
     div.addEventListener('click', function() { openArticleModal(i); });
-    div.querySelector('button').addEventListener('click', function(e) { e.stopPropagation(); openArticleModal(i); });
     list.appendChild(div);
   });
 }
@@ -813,6 +994,7 @@ async function openArticleModal(index) {
   $('modal-meta').textContent = (article.pubDate ? new Date(article.pubDate).toLocaleDateString('ko-KR') + ' · ' : '') + (article.domain || '');
   $('modal-body-text').innerHTML = '<div class="modal-body-empty">본문 불러오는 중...</div>';
   $('modal-origin-link').href = article.origin || article.url || '#';
+  updateModalBasketBtn();
   $('article-modal').classList.add('show');
   document.body.style.overflow = 'hidden';
   try {
@@ -899,14 +1081,13 @@ function normalizeArticleCards(rawCards, article) {
   ].flat().map(sanitizeCard);
 }
 
-/* 레터 만들기 */
+/* ===== 레터 만들기 ===== */
 function fillLetterSample() {
   $('letter-topic').value = '주말을 잘 보내는 방법';
   $('letter-reference').value = '이번 주말, 모르고 지나가기엔 너무 아까운 시간을 잘 보내는 방법. 정보성은 있지만 딱딱하지 않고, 친구가 추천해주는 듯한 톤.';
   $('letter-tone').value = '다정한 감성';
   $('letter-count').value = '7';
 }
-
 
 async function generateFromLetter() {
   var topic = $('letter-topic').value.trim();
@@ -917,8 +1098,8 @@ async function generateFromLetter() {
 
   var token = ++generationSeq;
   $('cards-panel').style.display = 'block';
-setStatus('warn', 'AI로 레터 문구 생성 중: ' + clip(topic, 54));
-showLoading('AI로 레터 카드뉴스를 쓰고 있어요...');
+  setStatus('warn', 'AI로 레터 문구 생성 중: ' + clip(topic, 54));
+  showLoading('AI로 레터 카드뉴스를 쓰고 있어요...');
 
   try {
     var result = await callWorkerForLetter(topic, referenceText, tone, cardCount);
@@ -948,114 +1129,9 @@ showLoading('AI로 레터 카드뉴스를 쓰고 있어요...');
   }
 }
 
-function localLetterCards(topic, referenceText, tone, cardCount) {
-  var topicClean = clean(topic) || '나를 위한 시간';
-  var count = Number(cardCount || 7);
-  var isWeekend = /주말|토요일|일요일|토욜|일욜/.test(topicClean);
-  var isDatePrep = /준비|기념일|생일|데이트|약속|6월|20일/.test(topicClean);
-
-  var title = '';
-  var subtitle = '';
-  var items = [];
-
-  if (isWeekend) {
-    title = '주말을 보내는\n가장 바람직한 자세 5';
-    subtitle = '이번 주말, 모르고 지나가기엔 너무 아까워요';
-    items = [
-      {
-        title: '좋아하는 카페에서 커피 한 잔',
-        body: '늘 가던 곳 말고\n저장해뒀던 카페에 가보는 건 어때요?\n\n좋아하는 메뉴 하나와\n잠깐의 여유만으로도 기분이 달라질 수 있어요.'
-      },
-      {
-        title: '방 한 구석만 정리하기',
-        body: '집 전체를 치우려고 하면\n시작도 전에 지칠 수 있죠.\n\n책상 위나 침대 옆처럼\n눈에 잘 들어오는 한 곳만 정리해도 충분해요.'
-      },
-      {
-        title: '휴대폰 없이 산책하기',
-        body: '꼭 멀리 가지 않아도 괜찮아요.\n\n동네 한 바퀴를 천천히 걷는 것만으로도\n머릿속이 조금 맑아질 수 있어요.'
-      },
-      {
-        title: '한 주를 위한 작은 준비',
-        body: '월요일이 덜 버겁게 느껴지도록\n가방이나 옷을 미리 챙겨두는 것도 좋아요.\n\n사소한 준비가\n다음 주를 조금 더 가볍게 만들어줘요.'
-      },
-      {
-        title: '아무것도 안 하는 시간 남겨두기',
-        body: '주말을 알차게 보내야 한다는 생각이\n오히려 부담이 될 때도 있어요.\n\n아무 계획 없이 쉬는 시간도\n분명 필요한 일정이에요.'
-      }
-    ];
-  } else if (isDatePrep) {
-    title = topicClean + '\n가장 바람직한 준비 5';
-    subtitle = referenceText ? clip(referenceText, 38) : '기대되는 날을 조금 더 다정하게 맞이하는 법';
-    items = [
-      {
-        title: '제일 먼저 기분부터 정하기',
-        body: '완벽한 계획보다 중요한 건\n그날 어떤 기분으로 보내고 싶은지예요.\n\n설렘인지, 편안함인지\n먼저 정해두면 선택이 쉬워져요.'
-      },
-      {
-        title: '입을 옷은 미리 꺼내두기',
-        body: '당일 아침에 고르기 시작하면\n괜히 마음이 바빠질 수 있죠.\n\n전날 밤에 한 벌만 걸어둬도\n하루가 훨씬 가볍게 시작돼요.'
-      },
-      {
-        title: '동선은 짧게 확인하기',
-        body: '어디서 만나고, 얼마나 걸리는지만\n가볍게 확인해두면 충분해요.\n\n너무 촘촘한 계획보다\n조금의 여백이 더 오래 기억될 때도 있어요.'
-      },
-      {
-        title: '작은 선물 하나 준비하기',
-        body: '비싼 것이 아니어도 괜찮아요.\n\n상대가 좋아할 만한 작은 것 하나가\n그날의 분위기를 더 따뜻하게 만들어줘요.'
-      },
-      {
-        title: '기대는 하되 부담은 덜어두기',
-        body: '행복한 날일수록\n잘해야 한다는 마음이 커질 수 있어요.\n\n조금 서툴러도 괜찮아요.\n즐거우면 그걸로 충분해요.'
-      }
-    ];
-  } else {
-    title = topicClean.length <= 13 ? topicClean + '\n가장 바람직한 방법 5' : topicClean;
-    subtitle = referenceText ? clip(referenceText, 38) : '오늘의 시간을 조금 더 다정하게 쓰고 싶다면';
-    items = [
-      {
-        title: '지금 필요한 마음부터 고르기',
-        body: '무엇을 해야 할지 모르겠다면\n먼저 내 기분을 살펴보는 건 어때요?\n\n쉬고 싶은지, 움직이고 싶은지\n그 마음만 알아도 시작이 쉬워져요.'
-      },
-      {
-        title: '작게 시작할 수 있는 일 정하기',
-        body: '처음부터 완벽하게 하려고 하면\n오히려 부담스러울 수 있어요.\n\n5분 안에 할 수 있는 일 하나면\n오늘의 방향을 바꾸기에 충분해요.'
-      },
-      {
-        title: '좋아하는 장면 하나 넣기',
-        body: '좋아하는 음악이나 커피,\n짧은 산책처럼 사소한 것도 좋아요.\n\n작은 취향 하나가\n하루를 조금 더 내 것처럼 만들어줘요.'
-      },
-      {
-        title: '하지 않을 것도 정해두기',
-        body: '무엇을 할지 정하는 것만큼\n무엇을 덜어낼지도 중요해요.\n\n오늘은 하나쯤 미뤄도 괜찮아요.\n그 여백이 필요할 때도 있으니까요.'
-      },
-      {
-        title: '마지막엔 나를 칭찬하기',
-        body: '많이 해내지 못한 날이어도\n분명 챙긴 것이 있을 거예요.\n\n작은 선택 하나를 알아봐주는 것만으로도\n마음이 조금 편해질 수 있어요.'
-      }
-    ];
-  }
-
-  var result = [{ type: 'cover', title: title, subtitle: subtitle }];
-  var middleCount = Math.max(1, count - 2);
-  for (var i = 0; i < middleCount; i++) {
-    var item = items[i % items.length];
-    result.push({ type: 'content', num: String(i + 1), title: item.title, body: item.body });
-  }
-  result.push({
-    type: 'ending',
-    title: '거창하지 않아도 괜찮아요',
-    body: isWeekend
-      ? '이번 주말엔\n나를 위한 시간 하나만 챙겨봐도 충분해요.'
-      : '오늘은 나를 위한 선택 하나만\n조용히 챙겨봐도 충분해요.'
-  });
-  return result.slice(0, count);
-}
 function normalizeLetterCards(rawCards) {
   var arr = Array.isArray(rawCards) ? rawCards : [];
   var magName = magSettings.magName || 'POPO LETTER';
-
-  // 기사형 구조는 generateFromLetter에서 폐기합니다. 여기서는 순수 레터형 JSON만 변환합니다.
-
   return arr.map(function(card, index) {
     if (card.type === 'cover' || index === 0) {
       return { label: 'COVER', role: 'COVER', title: keepLine(card.title || ''), subtitle: clean(card.subtitle || ''), body: '', type: 'hook', magName: magName };
@@ -1075,25 +1151,17 @@ function sanitizeCard(card) {
 }
 function sanitizeLetterText(text) {
   var s = String(text || '');
-
-  // 레터/카드 공통 금지어 제거
-  FORBIDDEN_LETTER_WORDS.forEach(function(w) {
-    s = s.split(w).join('');
-  });
-
-  // 기사 수집 실패/검색 설명/사이트 UI 문구 제거
+  FORBIDDEN_LETTER_WORDS.forEach(function(w) { s = s.split(w).join(''); });
   var noisePatterns = [
     /본문\s*수집\s*불가[^.!?\n。]{0,160}/g,
     /원문\s*확인\s*필요[^.!?\n。]{0,160}/g,
     /검색\s*결과\s*설명[^.!?\n。]{0,180}/g,
     /카드뉴스용\s*요약을\s*안정적으로\s*만들기\s*어렵습니다/g,
-
     /스크롤[^.!?\n。]{0,80}/g,
     /상태바[^.!?\n。]{0,80}/g,
     /화면\s*이동[^.!?\n。]{0,80}/g,
     /페이지\s*이동[^.!?\n。]{0,80}/g,
     /버튼[^.!?\n。]{0,60}/g,
-
     /관련기사[^.!?\n。]{0,120}/g,
     /추천기사[^.!?\n。]{0,120}/g,
     /많이\s*본\s*뉴스[^.!?\n。]{0,120}/g,
@@ -1102,36 +1170,24 @@ function sanitizeLetterText(text) {
     /댓글\s*\d*[^.!?\n。]{0,80}/g,
     /광고[^.!?\n。]{0,80}/g,
     /구독[^.!?\n。]{0,80}/g,
-
     /무단전재[^.!?\n。]{0,160}/g,
     /재배포\s*금지[^.!?\n。]{0,160}/g,
     /저작권자[^.!?\n。]{0,160}/g,
     /Copyright[^.!?\n。]{0,200}/gi,
-
     /[가-힣]{2,5}\s*기자\s*[\w.%-]+@[\w.-]+/g,
     /[가-힣]{2,5}\s*기자/g,
     /입력\s*\d{4}[.\/-]\d{1,2}[.\/-]\d{1,2}[^.!?\n。]{0,120}/g,
     /수정\s*\d{4}[.\/-]\d{1,2}[.\/-]\d{1,2}[^.!?\n。]{0,120}/g
   ];
-
-  noisePatterns.forEach(function(pattern) {
-    s = s.replace(pattern, ' ');
-  });
-
-  // 말투 정리
+  noisePatterns.forEach(function(pattern) { s = s.replace(pattern, ' '); });
   s = s.replace(/\s+것입니다\.?/g, ' 좋아요.');
   s = s.replace(/\s+수 있습니다\.?/g, ' 수 있어요.');
   s = s.replace(/\s+합니다\.?/g, '해요.');
   s = s.replace(/\s+하세요\.?/g, '해보는 건 어때요?');
-
-  return s
-    .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n[ \t]+/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
+  return s.replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/\s{2,}/g, ' ').trim();
 }
-/* 카드 렌더링 */
+
+/* ===== 카드 렌더링 ===== */
 function setStatus(type, msg) {
   var el = $('source-status');
   el.className = 'source-status ' + (type === 'ok' ? 'ok' : 'warn');
@@ -1150,7 +1206,7 @@ function styleOf(i) {
   };
   return cardStyles[i];
 }
-function alignOf(i) { if (!cardAlign[i]) cardAlign[i] = i === 0 ? 'left' : 'left'; return cardAlign[i]; }
+function alignOf(i) { if (!cardAlign[i]) cardAlign[i] = 'left'; return cardAlign[i]; }
 function setAlign(i, align) { cardAlign[i] = align; rerenderCard(i); }
 function setStyle(i, k, v) { styleOf(i)[k] = k === 'size' || k === 'overlay' || k === 'titleSize' || k === 'bodySize' ? Number(v) : v; rerenderCard(i); }
 function rerenderCard(i) { var el = $('card-' + i); if (el) el.innerHTML = cardHtml(cards[i], i); renderCaption(); }
@@ -1204,7 +1260,6 @@ function renderHookTitle(title, main, accent) {
 function cardHtml(c, i) {
   var st = styleOf(i), align = alignOf(i);
   var textAlign = align;
-  if (align === 'center') textAlign = 'center';
   var magName = c.magName || magSettings.magName || 'POPO LETTER';
   var magHandle = magSettings.magHandle || 'popo레터';
   var counter = (i + 1) + '/' + cards.length;
@@ -1218,9 +1273,7 @@ function cardHtml(c, i) {
       + '</div>'
       + '<div style="position:absolute;left:18px;right:18px;bottom:30px;text-align:' + textAlign + ';z-index:2">'
       + '<div style="font-size:' + (st.titleSize||st.size) + 'px;line-height:1.22;font-weight:950;letter-spacing:-.06em;word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.25)">' + renderHookTitle(c.title, st.title, st.accent) + '</div>'
-
       + '</div>'
-      + ''
       + '</div>';
   }
 
@@ -1241,16 +1294,15 @@ function cardHtml(c, i) {
   return '<div class="card-inner" style="background:' + st.bg + ';">'
     + imageLayer(i, st)
     + '<div style="position:absolute;top:14px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:3;">'
-      + '<span style="display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 14px;border:1px solid rgba(255,255,255,.62);border-radius:999px;font-size:8px;color:rgba(255,255,255,.84);font-weight:900;letter-spacing:.06em">' + escapeHtml(magName.replace(' LETTER','')) + '</span>'
-      + '<span style="background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</span>'
-      + '</div>'
+    + '<span style="display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 14px;border:1px solid rgba(255,255,255,.62);border-radius:999px;font-size:8px;color:rgba(255,255,255,.84);font-weight:900;letter-spacing:.06em">' + escapeHtml(magName.replace(' LETTER','')) + '</span>'
+    + '<span style="background:rgba(0,0,0,.34);border-radius:999px;color:#fff;font-size:10px;font-weight:900;padding:5px 8px">' + counter + '</span>'
+    + '</div>'
     + '<div style="position:absolute;left:18px;right:18px;top:50px;text-align:' + textAlign + ';z-index:2">'
     + '<div style="font-size:' + (st.titleSize||st.size) + 'px;line-height:1.35;font-weight:900;color:' + st.title + ';word-break:keep-all;text-shadow:0 2px 12px rgba(0,0,0,.25)">' + escapeHtml(c.title || '') + '</div>'
     + '</div>'
     + '<div style="position:absolute;left:18px;right:18px;bottom:28px;text-align:' + textAlign + ';z-index:2">'
     + '<div style="font-size:' + (st.bodySize||Math.max(6,st.size-4)) + 'px;line-height:1.72;font-weight:650;color:' + st.body + ';white-space:pre-line;word-break:keep-all;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.body || '') + '</div>'
     + '</div>'
-    + ''
     + '</div>';
 }
 function renderEdit(c, i) {
@@ -1260,7 +1312,6 @@ function renderEdit(c, i) {
   div.innerHTML = '<div class="edit-panel-head">' + escapeHtml(c.label) + '</div>'
     + '<div class="edit-label">제목 수정</div>'
     + '<textarea id="title-' + i + '" class="title-input" oninput="applyText(' + i + ', true)">' + escapeHtml(c.title || '') + '</textarea>'
-
     + (c.type !== 'hook' ? '<div class="edit-label">본문 수정</div><textarea id="body-' + i + '" class="body-input" oninput="applyText(' + i + ', true)">' + escapeHtml(c.body || '') + '</textarea>' : '')
     + '<div class="color-grid">'
     + '<label class="color-item">배경 <input type="color" value="' + st.bg + '" onchange="setStyle(' + i + ',\'bg\',this.value)"></label>'
@@ -1288,7 +1339,7 @@ function setImage(i, input) {
   r.readAsDataURL(f);
 }
 
-/* 캡션 */
+/* ===== 캡션 ===== */
 function makeCaptionFromCards(cardList, defaultTags) {
   var lines = [];
   if (cardList[0]) lines.push(clean(cardList[0].title || '').replace(/\n/g, ' '));
@@ -1315,37 +1366,28 @@ function copyCaption() {
   navigator.clipboard.writeText(text).then(function() { showToast('캡션을 복사했어요.'); });
 }
 
-/* 다운로드 */
-// 화면에 보이는 카드를 그대로 고해상도 캡처
+/* ===== 다운로드 ===== */
 async function captureCardOffscreen(i) {
   var modal = $('preview-modal');
   var wasHidden = modal.style.display === 'none' || !modal.style.display;
-
-  // 모달 먼저 열고 레이아웃 잡힌 후 렌더링
   if (wasHidden) {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    await new Promise(function(r) { setTimeout(r, 80); }); // 레이아웃 확정 대기
+    await new Promise(function(r) { setTimeout(r, 80); });
   }
-
   renderPreviewCard(i);
   await new Promise(function(r) { setTimeout(r, 120); });
-
-  // nav버튼/dots 숨기기
   var prevBtn = $('preview-prev-btn');
   var nextBtn = $('preview-next-btn');
   var dots = $('preview-dots');
   if (prevBtn) prevBtn.style.display = 'none';
   if (nextBtn) nextBtn.style.display = 'none';
   if (dots) dots.style.display = 'none';
-
-  // preview-card-img 안의 wrapper만 캡처
   var imgBox = $('preview-card-img');
   var wrapper = imgBox.firstElementChild;
   var target = wrapper || imgBox;
   var tw = target.offsetWidth;
   var th = target.offsetHeight;
-
   var canvas = await html2canvas(target, {
     scale: 3,
     useCORS: true,
@@ -1354,12 +1396,9 @@ async function captureCardOffscreen(i) {
     width: tw,
     height: th
   });
-
-  // nav버튼/dots 복원
   if (prevBtn) prevBtn.style.display = '';
   if (nextBtn) nextBtn.style.display = '';
   if (dots) dots.style.display = '';
-
   if (wasHidden) {
     modal.style.display = 'none';
     document.body.style.overflow = '';
@@ -1367,10 +1406,9 @@ async function captureCardOffscreen(i) {
   return canvas;
 }
 
-
 async function downloadAll() {
   if (!cards.length) { showToast('먼저 카드를 생성해 주세요.'); return; }
-  if (typeof JSZip === 'undefined' || typeof html2canvas === 'undefined') { showToast('다운로드 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'); return; }
+  if (typeof JSZip === 'undefined' || typeof html2canvas === 'undefined') { showToast('다운로드 라이브러리를 불러오지 못했어요.'); return; }
   showLoading('이미지 생성 중...');
   try {
     var zip = new JSZip();
@@ -1393,7 +1431,7 @@ async function downloadAll() {
   }
 }
 
-/* 인스타 미리보기 */
+/* ===== 인스타 미리보기 ===== */
 function openPreview() {
   if (!cards.length) { showToast('먼저 카드를 생성해 주세요.'); return; }
   previewIndex = 0;
@@ -1421,12 +1459,10 @@ function renderPreviewCard(idx) {
   previewIndex = idx;
   var imgBox = $('preview-card-img');
   imgBox.innerHTML = '';
-
   var boxW = imgBox.offsetWidth || 360;
   var BASE_W = 240;
-  var BASE_H = 320; // 3:4
+  var BASE_H = 320;
   var scale = boxW / BASE_W;
-
   var html = cardHtml(cards[idx], idx);
   var inner = document.createElement('div');
   inner.style.cssText = 'width:' + BASE_W + 'px;height:' + BASE_H + 'px;transform-origin:top left;transform:scale(' + scale + ');flex-shrink:0;';
@@ -1439,21 +1475,17 @@ function renderPreviewCard(idx) {
     var imgEl = cardEl.querySelector('img');
     if (imgEl) { imgEl.style.width = '100%'; imgEl.style.height = '100%'; imgEl.style.objectFit = 'cover'; }
   }
-
   var wrapper = document.createElement('div');
   wrapper.style.cssText = 'width:' + boxW + 'px;height:' + (BASE_H * scale) + 'px;overflow:hidden;flex-shrink:0;';
   wrapper.appendChild(inner);
   imgBox.appendChild(wrapper);
-
-  // preview-counter 숨기기 (cardHtml 안에 이미 있음)
   $('preview-counter').style.display = 'none';
-
   var dotEls = $('preview-dots').children;
   for (var i = 0; i < dotEls.length; i++) dotEls[i].style.background = i === idx ? '#fff' : 'rgba(255,255,255,0.4)';
 }
 function closePreviewModal() { $('preview-modal').style.display = 'none'; document.body.style.overflow = ''; }
 
-/* 매거진 설정 */
+/* ===== 매거진 설정 ===== */
 function openMagModal() {
   $('mag-name').value = magSettings.magName || '';
   $('mag-handle').value = magSettings.magHandle || '';
@@ -1462,7 +1494,6 @@ function openMagModal() {
   $('mag-hashtags').value = magSettings.magHashtags || '';
   $('mag-accent').value = magSettings.magAccent || '#ff9ec7';
   $('mag-accent-val').textContent = magSettings.magAccent || '#ff9ec7';
-  // 로고 미리보기
   var prev = $('mag-logo-preview');
   if (magSettings.magLogo) {
     prev.innerHTML = '<img src="' + magSettings.magLogo + '" style="width:100%;height:100%;object-fit:cover;">';
@@ -1473,10 +1504,7 @@ function openMagModal() {
   $('mag-modal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
-function closeMagModal() {
-  $('mag-modal').style.display = 'none';
-  document.body.style.overflow = '';
-}
+function closeMagModal() { $('mag-modal').style.display = 'none'; document.body.style.overflow = ''; }
 function handleMagLogo(input) {
   if (!input.files || !input.files[0]) return;
   var reader = new FileReader();
@@ -1487,10 +1515,7 @@ function handleMagLogo(input) {
   };
   reader.readAsDataURL(input.files[0]);
 }
-function clearMagLogo() {
-  magSettings.magLogo = '';
-  $('mag-logo-preview').innerHTML = '📰';
-}
+function clearMagLogo() { magSettings.magLogo = ''; $('mag-logo-preview').innerHTML = '📰'; }
 function applyMagSettings() {
   magSettings.magName = $('mag-name').value.trim() || magSettings.magName;
   magSettings.magHandle = $('mag-handle').value.trim() || magSettings.magHandle;
@@ -1499,13 +1524,11 @@ function applyMagSettings() {
   magSettings.magHashtags = $('mag-hashtags').value.trim() || magSettings.magHashtags;
   magSettings.magAccent = $('mag-accent').value || magSettings.magAccent;
   saveMagSettings();
-  // 미리보기 핸들 업데이트
   var handle = magSettings.magHandle.replace('@','');
   if ($('preview-profile-name')) $('preview-profile-name').textContent = handle;
   if ($('preview-profile-initial')) $('preview-profile-initial').textContent = handle.charAt(0).toUpperCase();
   closeMagModal();
   showToast('매거진 설정이 저장됐어요.');
-  // 카드가 있으면 CTA 카드 갱신
   if (cards.length) {
     for (var i = 0; i < cards.length; i++) {
       if (cards[i].type === 'cta') {
@@ -1517,10 +1540,10 @@ function applyMagSettings() {
   }
 }
 
-
 function init() {
-  // (Claude 직접 호출 제거 — Worker 경유로 전환됨)
+  loadMagSettings();
   renderSearchChips();
+  renderBasket();
   checkWorkerHealth(false);
   $('search-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addTag(); } });
 }
