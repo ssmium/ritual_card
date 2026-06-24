@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MAGAZINIE — Letter Card News Editor</title>
+<meta name="description" content="네이버 뉴스/레터 주제로 감성 카드뉴스 생성 및 편집" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23111%27/%3E%3Ctext x=%2732%27 y=%2742%27 font-size=%2734%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Georgia%27 font-weight=%27900%27%3EM%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Black+Han+Sans&family=Gowun+Dodum&display=swap" />
+<style>
+@font-face {
+  font-family: 'MemomentKkukkukk';
+  src: url('MemomentKkukkukk.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+:root {
+  --ink: #111111;
+  --muted: #737373;
+  --rule: #ebebeb;
+  --bg: #ffffff;
+  --soft: #f5f5f5;
+  --danger: #d93838;
+  --g1: #ff9ec7;
+  --g2: #b9a3f5;
+  --ink2: #141019;
+  --mut2: #6c6678;
+  --line2: #ececf1;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  color: var(--ink);
+}
+button, input, textarea, select { font-family: inherit; }
+button { cursor: pointer; }
+
+/* 사이드바 */
+.app-sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 232px;
+  background: #fff;
+  border-right: 1px solid var(--rule);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  z-index: 20;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #111;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--rule);
+}
+.sidebar-logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: #111;
+  color: #fff;
+  font-family: Georgia, serif;
+  font-weight: 800;
+  font-size: 14px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+.sidebar-logo-text { font-size: 12px; font-weight: 800; letter-spacing: .18em; }
+.sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+.sidebar-nav-title {
+  padding: 0 14px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  color: #737373;
+  text-transform: uppercase;
+}
+.sidebar-nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #737373;
+  background: transparent;
+  border: none;
+  text-align: left;
+  transition: all .12s;
+}
+.sidebar-nav button.active { color: #111; background: #f5f5f5; }
+.sidebar-nav .num { color: #737373; font-size: 13px; width: 14px; }
+.side-steps { border-top: 1px solid var(--rule); padding-top: 18px; }
+.side-steps-head { font-size: 11px; font-weight: 700; letter-spacing: .12em; color: #737373; margin-bottom: 14px; }
+.side-step-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.side-step {
+  display: flex;
+  gap: 9px;
+  padding: 11px 12px;
+  border-radius: 14px;
+  background: linear-gradient(120deg,rgba(255,158,199,.10),rgba(185,163,245,.10));
+  border: 1px solid rgba(236,236,241,.95);
+}
+.side-step-num {
+  width: 26px; height: 26px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(140deg,var(--g1),var(--g2));
+  flex-shrink: 0;
+}
+.side-step-title { font-size: 12px; font-weight: 800; line-height: 1.3; color: #141019; }
+.side-step-desc { font-size: 11px; color: #6c6678; line-height: 1.45; margin-top: 3px; word-break: keep-all; }
+
+/* 메인 */
+.app-content { margin-left: 232px; min-height: 100vh; display: flex; flex-direction: column; background: #fff; }
+.app-content .wrap { max-width: 1180px; padding: 44px 56px 120px; width: 100%; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+.section-label { font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
+.lead { color: var(--muted); font-size: 14px; line-height: 1.6; margin-top: 8px; max-width: 720px; word-break: keep-all; }
+.worker-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  color: #737373;
+  white-space: nowrap;
+}
+.worker-status-dot { width: 7px; height: 7px; border-radius: 50%; background: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
+
+/* 공통 카드 */
+.workspace-card { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 20px; margin-bottom: 18px; }
+.mode-panel { display: none; }
+.mode-panel.active { display: block; }
+.panel-title { font-size: 15px; font-weight: 900; margin-bottom: 6px; }
+.panel-hint { font-size: 13px; color: #737373; line-height: 1.55; margin-bottom: 14px; word-break: keep-all; }
+.form-grid { display: grid; grid-template-columns: 1fr 180px 140px; gap: 10px; align-items: end; }
+.form-field label { display: block; font-size: 11px; font-weight: 900; color: #737373; margin-bottom: 7px; letter-spacing: .08em; }
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: #f8f8f8;
+  color: #111;
+  font-size: 13px;
+  outline: none;
+  padding: 11px 12px;
+  resize: vertical;
+}
+.form-field textarea { min-height: 94px; line-height: 1.55; }
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus { border-color: #111; background: #fff; }
+.form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.form-row .form-field { flex: 1; min-width: 160px; }
+
+/* 검색 */
+.search-bar { display: flex; gap: 10px; align-items: center; }
+.search-input-wrap { flex: 1; position: relative; }
+.search-input-wrap input {
+  width: 100%;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--soft);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 12px 16px;
+  letter-spacing: -.01em;
+  transition: border-color .12s;
+}
+.search-input-wrap input:focus { outline: none; border-color: var(--ink); background: #fff; }
+.search-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; min-height: 0; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: linear-gradient(120deg,rgba(255,158,199,.16),rgba(185,163,245,.16)); border: 1px solid rgba(185,163,245,.28); font-size: 12px; font-weight: 800; color: #141019; }
+.chip-x { opacity: .55; cursor: pointer; font-style: normal; }
+.suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.suggest button { border: 1px solid var(--rule); background: #fff; border-radius: 999px; padding: 5px 10px; font-size: 11px; cursor: pointer; color: #6c6678; font-weight: 800; }
+.suggest button:hover { border-color: #111; color: #111; }
+.manual-box { margin-top: 14px; border: 1px dashed #dad8e1; border-radius: 10px; padding: 14px; background: #fbfbfd; }
+.manual-title { font-size: 13px; font-weight: 900; margin-bottom: 5px; }
+.manual-hint { font-size: 12px; color: #737373; line-height: 1.55; margin-bottom: 8px; word-break: keep-all; }
+.manual-box textarea { width: 100%; min-height: 72px; border: 1px solid var(--rule); border-radius: 8px; padding: 10px; font-size: 13px; resize: vertical; outline: none; }
+
+/* 결과 */
+.results { display: none; }
+.result-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #737373; font-size: 13px; margin-bottom: 12px; }
+.article-list { display: grid; gap: 8px; }
+.article { display: grid; grid-template-columns: 54px 1fr auto auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; cursor: pointer; transition: border-color .12s, box-shadow .12s, transform .12s; }
+.article:hover, .article.selected { border-color: #111; box-shadow: rgba(20,16,25,.13) 0 12px 28px -20px; transform: translateY(-1px); }
+.article.in-basket { border-color: #b9a3f5; background: linear-gradient(120deg,rgba(255,158,199,.04),rgba(185,163,245,.06)); }
+.thumb { width: 54px; height: 50px; border-radius: 8px; background: linear-gradient(140deg,rgba(255,158,199,.2),rgba(185,163,245,.22)); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.article-info { min-width: 0; }
+.article-title { font-size: 13px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.article-sub, .article-desc { font-size: 11px; color: #737373; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.article-sub { margin-bottom: 3px; }
+.article button { white-space: nowrap; }
+
+/* 바구니 */
+.basket-card {
+  display: none;
+  background: #fff;
+  border: 1px solid #b9a3f5;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  background: linear-gradient(120deg,rgba(255,158,199,.04),rgba(185,163,245,.07));
+}
+.basket-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 7px;
+}
+.basket-item:last-child { margin-bottom: 0; }
+.basket-item-title { flex: 1; font-size: 13px; font-weight: 700; color: #141019; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.basket-item-del { background: none; border: none; color: #aaa; font-size: 16px; cursor: pointer; padding: 0 4px; flex-shrink: 0; line-height: 1; }
+.basket-item-del:hover { color: #d93838; }
+
+/* 다이제스트 플로팅 바 */
+.digest-bar {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111;
+  border-radius: 999px;
+  padding: 10px 16px 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0,0,0,.28);
+  white-space: nowrap;
+}
+.digest-bar.hidden { display: none; }
+
+/* 카드 패널 */
+.cards-panel { display: none; }
+.source-status { display: none; margin-bottom: 14px; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.55; word-break: keep-all; }
+.source-status.ok { display: block; background: #f0fdf4; border: 1px solid #bbf7d0; color: #047857; }
+.source-status.warn { display: block; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; }
+.download-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+.download-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.hint { font-size: 13px; color: #737373; line-height: 1.55; word-break: keep-all; }
+.card-scroll { overflow-x: auto; padding: 14px 4px 12px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.card-row { display: flex; gap: 18px; min-width: max-content; }
+.card-col { display: flex; flex-direction: column; align-items: center; gap: 8px; scroll-snap-align: start; }
+.card-label { font-size: 11px; color: #737373; font-weight: 900; letter-spacing: .18em; }
+.card-wrap { width: 240px; height: 320px; border-radius: 16px; position: relative; background: transparent; }
+.card-inner { position: relative; width: 100%; height: 100%; border-radius: 16px; overflow: hidden; box-shadow: rgba(0,0,0,.20) 0 18px 34px -20px, rgba(0,0,0,.08) 0 6px 14px -8px; }
+.align-row { display: flex; gap: 8px; align-items: center; width: 240px; }
+.align-row button { flex: 1; height: 34px; border: 1px solid var(--rule); background: #fff; border-radius: 7px; cursor: pointer; font-weight: 900; color: #6c6678; }
+.img-btn { width: 240px; padding: 9px 16px; border: 1px solid var(--rule); background: #fff; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 13px; }
+.edit-row { display: flex; gap: 18px; overflow-x: auto; padding-top: 16px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.edit-panel { width: 240px; min-width: 240px; border: 1px solid var(--rule); border-radius: 10px; padding: 12px; background: #fff; scroll-snap-align: start; }
+.edit-panel-head { font-size: 11px; color: #111; font-weight: 900; letter-spacing: .08em; padding-bottom: 8px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
+.edit-label { font-size: 10px; font-weight: 900; color: #737373; margin: 8px 0 5px; letter-spacing: .08em; }
+.edit-panel textarea { width: 100%; border: 1px solid var(--rule); border-radius: 8px; padding: 8px; font-size: 12px; resize: vertical; outline: none; line-height: 1.45; }
+.title-input { min-height: 50px; } .body-input { min-height: 108px; }
+.color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.color-item { display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--rule); border-radius: 8px; padding: 6px 8px; font-size: 11px; font-weight: 800; color: #6c6678; }
+.color-item input[type="color"] { width: 34px; height: 24px; border: none; background: transparent; padding: 0; cursor: pointer; }
+.size-row { display: flex; align-items: center; gap: 8px; margin-top: 9px; font-size: 11px; color: #6c6678; }
+.size-row input { flex: 1; accent-color: #111; }
+.apply { width: 100%; justify-content: center; margin-top: 10px; }
+.caption { background: #fbfbfd; border: 1px solid var(--rule); border-radius: 10px; padding: 16px; margin-top: 16px; }
+.caption-title { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; margin-bottom: 10px; }
+.caption-line { font-size: 13px; line-height: 1.7; margin-bottom: 5px; color: #141019; white-space: pre-wrap; }
+.hashtag-box { margin-top: 10px; color: #555; font-size: 13px; line-height: 1.7; }
+
+/* 버튼 */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border-radius: 6px; border: 1px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer; font-size: 13px; font-weight: 800; letter-spacing: .01em; transition: opacity .12s; text-decoration: none; }
+.btn:hover { opacity: .85; }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--rule); }
+.btn.ghost:hover { border-color: var(--ink); opacity: 1; }
+.btn.soft { background: #f5f5f5; color: #111; border-color: #ebebeb; }
+.btn.danger { background: #fff; color: var(--danger); border-color: #f2caca; }
+.btn.accent { background: linear-gradient(135deg,var(--g1),var(--g2)); border-color: transparent; color: #111; }
+
+/* 모달 */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9000; display: none; align-items: center; justify-content: center; padding: 24px; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: #fff; border-radius: 14px; width: 100%; max-width: 680px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 24px 64px rgba(0,0,0,.22); }
+.modal-head { padding: 22px 24px 16px; border-bottom: 1px solid var(--rule); }
+.modal-head-label { font-size: 11px; font-weight: 800; letter-spacing: .14em; color: var(--muted); margin-bottom: 6px; }
+.modal-head-title { font-size: 17px; font-weight: 900; letter-spacing: -.02em; line-height: 1.4; word-break: keep-all; }
+.modal-head-meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.modal-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.modal-body-text { font-size: 14px; line-height: 1.9; color: #222; word-break: keep-all; white-space: pre-wrap; letter-spacing: -.01em; }
+.modal-body-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 32px 0; }
+.modal-foot { padding: 16px 24px; border-top: 1px solid var(--rule); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* 인스타 미리보기 */
+.preview-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 9500; align-items: center; justify-content: center; padding: 16px; }
+.preview-box { background: #000; color: #fff; border-radius: 16px; width: 100%; max-width: 400px; max-height: 92vh; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.35); display: flex; flex-direction: column; }
+.preview-topbar { height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-weight: 800; }
+.preview-profile { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid #111; border-bottom: 1px solid #111; background: #000; }
+.preview-profile-initial { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#f09433,#dc2743,#bc1888); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: #fff; flex-shrink: 0; }
+.preview-card-area { background: #111; position: relative; width: 100%; aspect-ratio: 3/4; }
+.preview-card-img { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.preview-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.88); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; font-weight: 900; color: #111; box-shadow: 0 2px 8px rgba(0,0,0,.25); user-select: none; }
+.preview-prev { left: 10px; } .preview-next { right: 10px; }
+.preview-counter { position: absolute; top: 8px; right: 10px; font-size: 11px; font-weight: 800; color: rgba(255,255,255,.78); background: rgba(0,0,0,.25); border-radius: 999px; padding: 3px 7px; }
+.preview-dots { position: absolute; bottom: 8px; left: 0; right: 0; display: flex; justify-content: center; gap: 4px; pointer-events: none; }
+.preview-caption-area { padding: 10px 14px 14px; background: #000; color: #fff; overflow-y: auto; }
+
+/* 로딩/토스트 */
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #111; color: #fff; border-radius: 10px; padding: 10px 18px; font-size: 13px; z-index: 9999; opacity: 0; transition: .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+.loading { position: fixed; inset: 0; background: rgba(255,255,255,.86); display: none; align-items: center; justify-content: center; z-index: 9990; flex-direction: column; gap: 12px; }
+.loading.show { display: flex; }
+.spinner { width: 34px; height: 34px; border: 3px solid #ddd; border-top-color: #111; border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 820px) {
+  .app-sidebar { display: none; }
+  .app-content { margin-left: 0; }
+  .app-content .wrap { padding: 24px 16px 80px; }
+  .page-head { display: block; }
+  .worker-status-pill { margin-top: 14px; }
+  .download-row { display: block; }
+  .download-actions { justify-content: flex-start; margin-top: 12px; }
+  .card-wrap, .img-btn, .align-row { width: 220px; }
+  .card-wrap { height: 293px; }
+  .edit-panel { width: 220px; min-width: 220px; }
+  .article { grid-template-columns: 46px 1fr auto; }
+  .article button.basket-btn { grid-column: 3; }
+  .article button.view-btn { grid-column: 1/-1; }
+  .thumb { width: 46px; height: 44px; }
+  .search-bar { display: block; }
+  .search-bar .btn { width: 100%; margin-top: 10px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="app-sidebar">
+  <a class="sidebar-logo" href="#" onclick="return false;">
+    <span class="sidebar-logo-mark">M</span>
+    <span class="sidebar-logo-text">MAGAZINIE</span>
+  </a>
+  <div class="sidebar-nav">
+    <div class="sidebar-nav-title">Make</div>
+    <button type="button" id="nav-article" class="active" onclick="switchMode('article')"><span class="num">①</span>기사로 만들기</button>
+    <button type="button" id="nav-letter" onclick="switchMode('letter')"><span class="num">②</span>레터 만들기</button>
+  </div>
+  <div class="side-steps" style="margin-top:auto;">
+    <button type="button" onclick="openMagModal()" style="width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:10px;background:#fff;cursor:pointer;font-size:12px;font-weight:900;color:#141019;text-align:left;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:15px;">⚙️</span> 매거진 설정
+    </button>
+  </div>
+  <div class="side-steps">
+    <div class="side-steps-head">카드뉴스 만드는 순서</div>
+    <ol class="side-step-list">
+      <li class="side-step"><span class="side-step-num">1</span><span><b class="side-step-title">소스 선택</b><br><span class="side-step-desc">기사 또는 직접 입력한 주제를 선택해요.</span></span></li>
+      <li class="side-step"><span class="side-step-num">2</span><span><b class="side-step-title">카드 생성</b><br><span class="side-step-desc">AI가 옆으로 넘기는 카드뉴스를 만들어요.</span></span></li>
+      <li class="side-step"><span class="side-step-num">3</span><span><b class="side-step-title">편집</b><br><span class="side-step-desc">문장·색상·이미지를 카드별로 다듬어요.</span></span></li>
+      <li class="side-step"><span class="side-step-num">4</span><span><b class="side-step-title">저장</b><br><span class="side-step-desc">PNG/ZIP으로 다운로드해요.</span></span></li>
+    </ol>
+  </div>
+</nav>
+
+<main class="app-content">
+  <div class="wrap">
+
+    <div class="page-head">
+      <div>
+        <div class="section-label">Card News Editor</div>
+        <h1>카드뉴스 만들기</h1>
+        <p class="lead" id="page-lead">키워드로 기사를 검색하고, 기사를 선택하면 AI가 카드뉴스를 만들어요. 아래에서 가로로 넘겨보고 문장·색상·이미지를 바로 수정할 수 있어요.</p>
+      </div>
+      <span class="worker-status-pill">
+        <span class="worker-status-dot"></span>
+        <span id="worker-version">Worker 확인 중</span>
+      </span>
+    </div>
+
+    <!-- 기사로 만들기 -->
+    <section id="article-panel" class="workspace-card mode-panel active">
+      <div class="panel-title">기사로 만들기</div>
+      <div class="panel-hint">네이버 뉴스 검색 결과를 불러오고, 선택한 기사 본문을 기준으로 카드뉴스를 생성해요. 기사를 여러 개 담아두고 다이제스트로 한번에 만들 수도 있어요.</div>
+
+      <div class="search-bar">
+        <div class="search-input-wrap">
+          <input id="search-input" type="text" placeholder="키워드를 입력하세요. 예: 올리브영, 장원영, 무신사" />
+        </div>
+        <button class="btn" onclick="searchNews()">검색</button>
+      </div>
+
+      <div class="search-chips" id="search-chips"></div>
+      <div class="suggest" id="search-suggest"></div>
+
+      <div class="manual-box">
+        <div class="manual-title">본문 직접 붙여넣기 옵션</div>
+        <div class="manual-hint">언론사 본문 수집이 막힌 경우에만 사용하세요. 붙여넣은 본문은 선택 기사와 함께 AI에 전달됩니다.</div>
+        <textarea id="manual-text" placeholder="선택 사항: 기사 본문을 직접 붙여넣기"></textarea>
+      </div>
+    </section>
+
+    <!-- 레터 만들기 -->
+    <section id="letter-panel" class="workspace-card mode-panel">
+      <div class="panel-title">레터 만들기</div>
+      <div class="panel-hint">기사 요약이 아니라, 주제를 바탕으로 popo레터 같은 감성 정보형 카드뉴스를 만들어요. AI가 주제에 맞춰 레터형 카드뉴스 문구를 생성해요.</div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="letter-topic">주제</label>
+          <textarea id="letter-topic" placeholder="예: 주말을 잘 보내는 방법, 6월 20일을 준비하는 방법, 혼자 보내는 시간을 즐기는 법"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="letter-tone">톤</label>
+          <select id="letter-tone">
+            <option value="다정한 감성">다정한 감성</option>
+            <option value="가볍고 산뜻한">가볍고 산뜻한</option>
+            <option value="차분한 위로">차분한 위로</option>
+            <option value="생활 정보형">생활 정보형</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="letter-count">카드 수</label>
+          <select id="letter-count">
+            <option value="5">5장</option>
+            <option value="7" selected>7장</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="manual-box">
+        <div class="manual-title">참고 문장</div>
+        <div class="manual-hint">선택 사항이에요. 꼭 들어갔으면 하는 키워드, 분위기, 문장 예시를 적어주세요.</div>
+        <textarea id="letter-reference" placeholder="예: 이번 주말, 모르고 지나가기엔 너무 아까운 시간을 잘 보내는 방법. 다정하고 가볍게 제안하는 느낌."></textarea>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+        <button type="button" class="btn" onclick="generateFromLetter()">레터 카드뉴스 만들기</button>
+        <button type="button" class="btn ghost" onclick="fillLetterSample()">예시 채우기</button>
+      </div>
+    </section>
+
+    <!-- 검색 결과 -->
+    <section id="results-panel" class="workspace-card results">
+      <div class="result-meta">
+        <span><b>NAVER</b> 검색 결과 · <span id="result-source">-</span></span>
+        <span><span id="result-count">0</span>건</span>
+      </div>
+      <div id="article-list" class="article-list"></div>
+    </section>
+
+    <!-- 기사 보관함 -->
+    <section id="basket-panel" class="basket-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div style="font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px;">
+          📌 기사 보관함
+          <span id="basket-count" style="display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#111;color:#fff;font-size:11px;font-weight:800;">0</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn ghost" style="font-size:12px;padding:7px 12px;" onclick="clearBasket()">비우기</button>
+          <button class="btn accent" onclick="generateDigest()">다이제스트 만들기 →</button>
+        </div>
+      </div>
+      <div id="basket-items"></div>
+      <div style="font-size:11px;color:#a0a0b8;margin-top:10px;">기사 2개 이상 담으면 다이제스트를 만들 수 있어요. 검색 키워드를 바꿔도 보관함은 유지돼요.</div>
+    </section>
+
+    <!-- 카드 패널 -->
+    <section id="cards-panel" class="workspace-card cards-panel">
+      <div id="source-status" class="source-status"></div>
+      <div class="download-row">
+        <div>
+          <div class="hint"><b>카드 미리보기</b> — 옆으로 스크롤해서 전체 컷을 확인하세요.</div>
+          <div class="hint">각 카드 하단에서 정렬·이미지를 바꾸고, 아래 편집 패널에서 문장과 색상을 다듬을 수 있어요.</div>
+        </div>
+        <div class="download-actions">
+          <button type="button" class="btn ghost" onclick="openPreview()">📱 인스타 미리보기</button>
+          <button type="button" class="btn" onclick="downloadAll()">⬇ 전체 ZIP 다운로드</button>
+        </div>
+      </div>
+      <div class="card-scroll"><div id="card-row" class="card-row"></div></div>
+      <div id="edit-row" class="edit-row"></div>
+      <div class="caption">
+        <div class="caption-title">캡션 <button type="button" class="btn ghost" onclick="copyCaption()">전체 복사</button></div>
+        <div id="caption-box"></div>
+        <div id="hashtag-box" class="hashtag-box"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- 다이제스트 플로팅 바 -->
+<div id="digest-bar" class="digest-bar hidden">
+  <span id="digest-bar-count" style="color:rgba(255,255,255,.7);font-size:12px;font-weight:700;">0개 선택됨</span>
+  <button class="btn" style="background:#fff;color:#111;border-color:#fff;padding:8px 16px;border-radius:999px;" onclick="generateDigest()">다이제스트 만들기 →</button>
+  <button style="background:transparent;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.65);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:700;" onclick="clearBasket()">선택 해제</button>
+</div>
+
+<!-- 기사 미리보기 모달 -->
+<div id="article-modal" class="modal-overlay" onclick="closeArticleModal(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div class="modal-head-label">기사 본문 미리보기</div>
+          <div id="modal-title" class="modal-head-title"></div>
+          <div id="modal-meta" class="modal-head-meta"></div>
+        </div>
+        <a id="modal-origin-link" href="#" target="_blank" class="btn ghost" style="white-space:nowrap;flex-shrink:0;font-size:12px;padding:8px 12px;">원문 보기 ↗</a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="modal-body-text" class="modal-body-text"></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn ghost" onclick="closeArticleModal()">닫기</button>
+      <button type="button" class="btn ghost" id="modal-basket-btn" onclick="toggleBasketFromModal()">📌 보관함에 담기</button>
+      <button type="button" class="btn" id="modal-generate-btn" onclick="generateFromModal()">이 기사로 카드뉴스 만들기 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 매거진 설정 모달 -->
+<div id="mag-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9600;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.22);">
+    <div style="padding:20px 22px 0;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:.12em;color:#737373;margin-bottom:4px;">매거진 설정</div>
+        <div style="font-size:20px;font-weight:900;">매거진</div>
+      </div>
+      <button onclick="closeMagModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#737373;padding:4px;">✕</button>
+    </div>
+    <div style="padding:6px 22px 10px;font-size:12px;color:#737373;line-height:1.6;">매거진은 내 브랜드 템플릿이에요. 이름·핸들·멘트·색상·해시태그를 한 번 정해두면, 카드뉴스를 만들 때마다 자동으로 반영돼요. <span style="color:#8b5cf6;font-weight:700;">(브라우저에만 저장돼요.)</span></div>
+
+    <div style="padding:0 22px 22px;display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <div style="font-size:11px;font-weight:900;color:#737373;margin-bottom:6px;letter-spacing:.06em;">로고 이미지</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div id="mag-logo-preview" style="width:52px;height:52px;border-radius:50%;border:2px dashed #ddd;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:22px;background:#f5f5f7;flex-shrink:0;">📰</div>
+          <div style="flex:1;">
+            <input type="file" id="mag-logo-file" accept="image/*" style="display:none;" onchange="handleMagLogo(this)">
+            <button onclick="document.getElementById('mag-logo-file').click()" style="padding:7px 14px;border:1px solid var(--rule);border-radius:8px;background:#fff;font-size:12px;font-weight:800;cursor:pointer;margin-right:6px;">이미지 업로드</button>
+            <button onclick="clearMagLogo()" style="padding:7px 14px;border:1px solid var(--rule);border-radius:8px;background:#fff;font-size:12px;font-weight:800;cursor:pointer;color:#737373;">삭제</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">매거진 이름</label>
+        <input id="mag-name" type="text" placeholder="예: POPO LETTER" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">핸들 (@ 계정명)</label>
+        <input id="mag-handle" type="text" placeholder="예: popo레터" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">CTA 멘트 (마지막 카드 제목)</label>
+        <input id="mag-ment" type="text" placeholder='예: "이거 왜 난리예요?"' style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">CTA 본문</label>
+        <textarea id="mag-cta-body" rows="2" placeholder="예: 복잡한 이슈, 핵심만 쉽게&#10;한 장씩 넘기면 정리 끝" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;resize:vertical;box-sizing:border-box;"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">강조 색상</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="color" id="mag-accent" style="width:40px;height:36px;border:1px solid var(--rule);border-radius:8px;padding:2px;cursor:pointer;">
+          <span id="mag-accent-val" style="font-size:12px;color:#737373;"></span>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:900;color:#737373;display:block;margin-bottom:6px;letter-spacing:.06em;">기본 해시태그</label>
+        <input id="mag-hashtags" type="text" placeholder="예: #카드뉴스 #트렌드 #뉴스요약" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;">
+        <div style="font-size:11px;color:#737373;margin-top:4px;">띄어쓰기로 구분해요.</div>
+      </div>
+      <button onclick="applyMagSettings()" style="width:100%;padding:13px;background:#111;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;margin-top:4px;">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="preview-modal" class="preview-modal">
+  <div class="preview-box">
+    <div class="preview-topbar">
+      <span>5:45</span>
+      <button type="button" class="btn ghost" style="padding:5px 9px;font-size:11px;background:#111;color:#fff;border-color:#222;" onclick="closePreviewModal()">닫기</button>
+    </div>
+    <div class="preview-profile">
+      <div id="preview-profile-initial" class="preview-profile-initial">P</div>
+      <div>
+        <div id="preview-profile-name" style="font-size:13px;font-weight:900;">popo레터</div>
+        <div style="font-size:11px;color:#999;">Another Minute 15s</div>
+      </div>
+      <div style="margin-left:auto;font-size:18px;color:#fff;">···</div>
+    </div>
+    <div class="preview-card-area">
+      <div id="preview-card-img" class="preview-card-img"></div>
+      <div id="preview-prev-btn" class="preview-nav preview-prev">‹</div>
+      <div id="preview-next-btn" class="preview-nav preview-next">›</div>
+      <div id="preview-counter" class="preview-counter">1 / 7</div>
+      <div id="preview-dots" class="preview-dots"></div>
+    </div>
+    <div class="preview-caption-area">
+      <div style="display:flex;gap:14px;margin-bottom:8px;font-size:20px;"><span>♡</span><span>💬</span><span>↗</span><span style="margin-left:auto;">⌑</span></div>
+      <div style="font-size:13px;font-weight:900;margin-bottom:4px;">좋아요 <b>5,774개</b></div>
+      <div id="preview-caption" style="font-size:13px;line-height:1.6;word-break:keep-all;white-space:pre-wrap;"></div>
+      <div id="preview-hashtags" style="font-size:13px;color:#9ecbff;margin-top:4px;"></div>
+      <div style="font-size:12px;color:#777;margin-top:6px;">2시간 전</div>
+    </div>
+  </div>
+</div>
+
+<div id="loading" class="loading"><div class="spinner"></div><div id="loading-text">처리 중...</div></div>
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const WORKER_API_BASE = 'https://wispy-mountain-4c30.yjuio9603.workers.dev';
+const SUGGEST_DEFAULT = ['뷰티','화장품','올리브영','장원영','무신사','패션','스타일','팝업','트렌드','서울'];
+const FORBIDDEN_LETTER_WORDS = [
+  '이 기사는', '본 기사는', '독자들이', '도움을 줄 것입니다', '도움을 줄 수 있습니다',
+  '삶의 질을 높이는 계기', '건강한 삶을 유지하는 데 도움', '본 콘텐츠는', '효과적입니다', '필수입니다'
+];
+
+var searchTags = [];
+var currentArticles = [];
+var savedArticles = [];   // 바구니
+var selectedArticleIndex = -1;
+var cards = [];
+var cardImages = {};
+var cardStyles = {};
+var cardAlign = {};
+var generationSeq = 0;
+var lastQuery = '';
+var lastSummary = { caption: '', hashtags: [] };
+var modalArticleIndex = -1;
+var previewIndex = 0;
+var currentMode = 'article';
+var magSettings = {
+  magName: 'POPO LETTER',
+  magHandle: 'popo레터',
+  magMent: '"이거 왜 난리예요?"',
+  magCtaBody: '복잡한 이슈, 핵심만 쉽게\n한 장씩 넘기면 정리 끝',
+  magHashtags: '#카드뉴스 #트렌드 #뉴스요약',
+  magAccent: '#ff9ec7',
+  magLogo: '',
+  palette: 'peach'
+};
+
+function saveMagSettings() {
+  try { localStorage.setItem('magazinie_mag', JSON.stringify(magSettings)); } catch(e) {}
+}
+function loadMagSettings() {
+  try {
+    var s = localStorage.getItem('magazinie_mag');
+    if (s) { var p = JSON.parse(s); for (var k in p) magSettings[k] = p[k]; }
+  } catch(e) {}
+}
+
+function $(id) { return document.getElementById(id); }
+function decodeHtml(v) { var ta = document.createElement('textarea'); ta.innerHTML = String(v || ''); return ta.value; }
+function clean(v) { return decodeHtml(String(v || '')).replace(/<[^>]+>/g, ' ').replace(/[""]/g, '"').replace(/['']/g, "'").replace(/\s+/g, ' ').trim(); }
+function keepLine(v) { return decodeHtml(String(v || '')).replace(/<[^>]+>/g, ' ').replace(/[""]/g, '"').replace(/['']/g, "'").replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim(); }
+function escapeHtml(v) { return String(v || '').replace(/[&<>"']/g, function(s) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s]; }); }
+function clip(v, max) { var s = clean(v); return s.length > max ? s.slice(0, max - 1).replace(/\s+\S*$/, '') + '…' : s; }
+function showToast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2400); }
+function showLoading(msg) { $('loading-text').textContent = msg || '처리 중...'; $('loading').classList.add('show'); }
+function hideLoading() { $('loading').classList.remove('show'); }
+
+function switchMode(mode) {
+  currentMode = mode;
+  $('article-panel').classList.toggle('active', mode === 'article');
+  $('letter-panel').classList.toggle('active', mode === 'letter');
+  $('nav-article').classList.toggle('active', mode === 'article');
+  $('nav-letter').classList.toggle('active', mode === 'letter');
+  $('results-panel').style.display = mode === 'article' && currentArticles.length ? 'block' : 'none';
+  $('page-lead').textContent = mode === 'article'
+    ? '키워드로 기사를 검색하고, 기사를 선택하면 AI가 카드뉴스를 만들어요. 아래에서 가로로 넘겨보고 문장·색상·이미지를 바로 수정할 수 있어요.'
+    : '기사 요약이 아니라, 직접 입력한 주제를 바탕으로 감성 정보형 레터 카드뉴스를 만들어요. popo레터처럼 사진 위에 짧고 다정한 문구가 올라가는 톤입니다.';
+}
+
+async function fetchWithTimeout(url, opt, timeout) {
+  if (!timeout) timeout = 30000;
+  var ctrl = new AbortController();
+  var timer = setTimeout(function() { ctrl.abort(); }, timeout);
+  try { return await fetch(url, Object.assign({}, opt || {}, { signal: ctrl.signal })); }
+  finally { clearTimeout(timer); }
+}
+
+async function workerApiJson(path, options) {
+  if (!options) options = {};
+  var url = WORKER_API_BASE.replace(/\/$/, '') + path;
+  var res = await fetchWithTimeout(url, options, options.timeout || 30000);
+  var text = await res.text();
+  var data;
+  try { data = JSON.parse(text); } catch(e) { throw new Error('Worker 응답을 읽지 못했어요.'); }
+  if (!res.ok || data.ok === false) throw new Error(data.error || data.message || 'Worker 호출 실패');
+  return data;
+}
+
+function parseLetterJsonArray(text) {
+  var raw = String(text || '').trim().replace(/```json|```/g, '').trim();
+  try {
+    var direct = JSON.parse(raw);
+    if (Array.isArray(direct)) return direct;
+    if (Array.isArray(direct.cards)) return direct.cards;
+  } catch(e) {}
+  var start = raw.indexOf('[');
+  var end = raw.lastIndexOf(']');
+  if (start >= 0 && end > start) {
+    var sliced = raw.slice(start, end + 1);
+    var parsed = JSON.parse(sliced);
+    if (Array.isArray(parsed)) return parsed;
+  }
+  throw new Error('레터 응답에서 JSON 배열을 찾지 못했어요.');
+}
+function isNewsStyleCards(arr) {
+  var joined = arr.map(function(c) {
+    return [c && c.role, c && c.label, c && c.title, c && c.body].join(' ');
+  }).join(' ').toUpperCase();
+  return /NOW TRENDING|CONTEXT|THE TAKEAWAY|WHAT'S NEXT|WHY IT MATTERS|뉴스|기사|독자들이|도움을 줄 것입니다/.test(joined);
+}
+
+async function callWorkerForLetter(topic, referenceText, tone, cardCount) {
+  var data = await workerApiJson('/generate-letter', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topic: topic, referenceText: referenceText, tone: tone, cardCount: cardCount }),
+    timeout: 60000
+  });
+  if (!data.ok) throw new Error(data.error || 'Worker 레터 생성 실패');
+  if (!Array.isArray(data.cards) || !data.cards.length) throw new Error('Worker가 빈 카드를 반환했어요.');
+  return { cards: data.cards, usedModel: data.usedModel || '' };
+}
+
+async function checkWorkerHealth(toast) {
+  try {
+    var data = await workerApiJson('/health', { timeout: 9000 });
+    $('worker-version').textContent = data.version || 'connected';
+    if (toast) showToast('Worker 연결 확인 완료');
+  } catch(e) {
+    $('worker-version').textContent = '연결 확인 필요';
+    if (toast) showToast(e.message);
+  }
+}
+
+/* ===== 바구니 ===== */
+function isInBasket(article) {
+  return savedArticles.some(function(a) { return a.url === article.url; });
+}
+
+function toggleBasket(article) {
+  if (isInBasket(article)) {
+    savedArticles = savedArticles.filter(function(a) { return a.url !== article.url; });
+    showToast('보관함에서 제거했어요.');
+  } else {
+    if (savedArticles.length >= 5) { showToast('최대 5개까지 담을 수 있어요.'); return; }
+    savedArticles.push(article);
+    showToast('📌 보관함에 담았어요! (' + savedArticles.length + '개)');
+  }
+  renderArticles();
+  renderBasket();
+}
+
+function clearBasket() {
+  savedArticles = [];
+  renderArticles();
+  renderBasket();
+  showToast('보관함을 비웠어요.');
+}
+
+function removeBasketItem(i) {
+  savedArticles.splice(i, 1);
+  renderArticles();
+  renderBasket();
+}
+
+function renderBasket() {
+  var panel = $('basket-panel');
+  var countEl = $('basket-count');
+  var itemsEl = $('basket-items');
+  var bar = $('digest-bar');
+  var n = savedArticles.length;
+  countEl.textContent = n;
+  if (n === 0) {
+    panel.style.display = 'none';
+    if (bar) bar.classList.add('hidden');
+    return;
+  }
+  panel.style.display = 'block';
+  if (bar) {
+    bar.classList.remove('hidden');
+    $('digest-bar-count').textContent = n + '개 선택됨';
+  }
+  itemsEl.innerHTML = savedArticles.map(function(a, i) {
+    return '<div class="basket-item">'
+      + '<span class="basket-item-title">' + escapeHtml(a.title) + '</span>'
+      + '<span style="font-size:11px;color:#aaa;white-space:nowrap;flex-shrink:0;">' + escapeHtml(a.domain || '') + '</span>'
+      + '<button class="basket-item-del" onclick="removeBasketItem(' + i + ')" title="제거">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+function toggleBasketFromModal() {
+  var article = currentArticles[modalArticleIndex];
+  if (!article) return;
+  toggleBasket(article);
+  updateModalBasketBtn();
+}
+
+function updateModalBasketBtn() {
+  var btn = $('modal-basket-btn');
+  if (!btn) return;
+  var article = currentArticles[modalArticleIndex];
+  if (!article) return;
+  if (isInBasket(article)) {
+    btn.textContent = '📌 보관함에서 빼기';
+    btn.style.borderColor = '#b9a3f5';
+    btn.style.color = '#6f4fe8';
+  } else {
+    btn.textContent = '📌 보관함에 담기';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}
+
+/* ===== 다이제스트 ===== */
+function normalizeDigestCards(rawCards) {
+  var magName = magSettings.magName || 'POPO LETTER';
+  return rawCards.map(function(c) {
+    if (c.type === 'digest-cover' || c.type === 'cover') {
+      return { label: c.label || 'COVER', type: 'hook', title: keepLine(c.title || '이주의\n뉴스'), body: c.body || '', magName: magName };
+    }
+    return {
+      label: c.label || 'CARD',
+      type: 'body',
+      role: c.label || 'DIGEST',
+      title: clean(c.headline || c.title || ''),
+      body: keepLine(c.body || '')
+    };
+  });
+}
+
+async function generateDigest() {
+  if (savedArticles.length < 2) { showToast('기사를 2개 이상 담아주세요.'); return; }
+  var token = ++generationSeq;
+  $('cards-panel').style.display = 'block';
+  setStatus('warn', '보관함 기사 ' + savedArticles.length + '건 AI 요약 중...');
+  showLoading('다이제스트 카드뉴스 만드는 중...');
+  try {
+    var data = await workerApiJson('/generate-digest', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ articles: savedArticles }),
+      timeout: 120000
+    });
+    if (token !== generationSeq) return;
+    if (!data.cards || !data.cards.length) throw new Error('다이제스트 카드가 비어있어요.');
+    cards = normalizeDigestCards(data.cards).map(sanitizeCard);
+    lastSummary = {
+      caption: '이번 주 주요 뉴스 ' + savedArticles.length + '건 모아봤어요 📰\n\n' + savedArticles.map(function(a) { return '· ' + a.title; }).join('\n'),
+      hashtags: ['#이주의뉴스', '#카드뉴스', '#다이제스트', '#뉴스요약']
+    };
+    cardImages = {}; cardStyles = {}; cardAlign = {};
+    renderCards();
+    setStatus('ok', '다이제스트 카드뉴스 생성 완료 — ' + savedArticles.length + '건');
+    setTimeout(function() { $('cards-panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+    showToast('다이제스트 카드뉴스를 만들었어요!');
+  } catch(e) {
+    setStatus('warn', e.message || '다이제스트 생성 실패');
+    showToast(e.message || '다이제스트 생성 실패');
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ===== 검색 ===== */
+function renderSearchChips() {
+  $('search-chips').innerHTML = searchTags.map(function(t, i) {
+    return '<span class="chip">' + escapeHtml(t) + '<em class="chip-x" onclick="removeTag(' + i + ')">×</em></span>';
+  }).join('');
+  var used = {};
+  searchTags.forEach(function(t) { used[t] = true; });
+  $('search-suggest').innerHTML = SUGGEST_DEFAULT.filter(function(v) { return !used[v]; }).map(function(v) {
+    return '<button type="button" onclick="addTag(\'' + escapeHtml(v) + '\')">' + escapeHtml(v) + '</button>';
+  }).join('');
+}
+function addTag(value) {
+  var v = clean(value || $('search-input').value || '');
+  if (!v) { showToast('키워드를 입력해 주세요.'); return; }
+  if (!searchTags.includes(v)) searchTags.push(v);
+  $('search-input').value = '';
+  loadMagSettings();
+  renderSearchChips();
+}
+function removeTag(i) { searchTags.splice(i, 1); renderSearchChips(); }
+
+function normalizeArticle(a, i) {
+  return {
+    id: i,
+    title: clean(a.title),
+    desc: clean(a.desc || a.description),
+    url: a.url || a.link || '',
+    origin: a.origin || a.originallink || a.url || a.link || '',
+    domain: a.domain || '',
+    pubDate: a.pubDate || ''
+  };
+}
+
+async function searchNews() {
+  var input = $('search-input').value.trim();
+  if (input) addTag(input);
+  var q = searchTags.length ? searchTags.join(' ') : '';
+  if (!q) { showToast('키워드를 입력해 주세요.'); return; }
+  lastQuery = q;
+  $('manual-text').value = '';
+  cards = []; cardImages = {}; cardStyles = {}; cardAlign = {}; lastSummary = { caption: '', hashtags: [] };
+  $('cards-panel').style.display = 'none';
+  showLoading('"' + q + '" 뉴스 검색 중...');
+  try {
+    var data = await workerApiJson('/search-news?q=' + encodeURIComponent(q) + '&type=general', { timeout: 30000 });
+    currentArticles = (data.articles || data.items || []).map(function(a, i) { return normalizeArticle(a, i); });
+    selectedArticleIndex = -1;
+    renderArticles();
+    $('results-panel').style.display = 'block';
+    $('result-count').textContent = currentArticles.length;
+    $('result-source').textContent = data.source || 'Cloudflare Worker + Naver API';
+    showToast('뉴스 ' + currentArticles.length + '건을 불러왔어요.');
+  } catch(e) {
+    showToast(e.message || '검색 실패');
+  } finally {
+    hideLoading();
+  }
+}
+
+function renderArticles() {
+  var list = $('article-list');
+  list.innerHTML = '';
+  currentArticles.forEach(function(a, i) {
+    var date = '최근';
+    if (a.pubDate) {
+      try { date = new Date(a.pubDate).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch(e) {}
+    }
+    var inBasket = isInBasket(a);
+    var div = document.createElement('div');
+    div.className = 'article' + (selectedArticleIndex === i ? ' selected' : '') + (inBasket ? ' in-basket' : '');
+    div.innerHTML = '<div class="thumb">' + (inBasket ? '📌' : '📰') + '</div>'
+      + '<div class="article-info">'
+      + '<div class="article-title">' + escapeHtml(a.title) + '</div>'
+      + '<div class="article-sub">' + escapeHtml(date) + ' · ' + escapeHtml(a.domain || '') + '</div>'
+      + '<div class="article-desc">' + escapeHtml(a.desc || '기사 설명 없음') + '</div>'
+      + '</div>'
+      + '<button type="button" class="btn ghost basket-btn" style="font-size:12px;padding:7px 10px;" onclick="event.stopPropagation();toggleBasket(currentArticles[' + i + '])">'
+      + (inBasket ? '담김 ✓' : '+ 담기') + '</button>'
+      + '<button type="button" class="btn view-btn" style="font-size:12px;padding:7px 10px;" onclick="event.stopPropagation();openArticleModal(' + i + ')">본문 보기</button>';
+    div.addEventListener('click', function() { openArticleModal(i); });
+    list.appendChild(div);
+  });
+}
+
+function getManualTextForArticle() {
+  var t = $('manual-text').value.trim();
+  if (t.length < 80) return '';
+  return '[선택기사본문]' + t;
+}
+
+async function openArticleModal(index) {
+  var article = currentArticles[index];
+  if (!article) return;
+  modalArticleIndex = index;
+  $('modal-title').textContent = article.title;
+  $('modal-meta').textContent = (article.pubDate ? new Date(article.pubDate).toLocaleDateString('ko-KR') + ' · ' : '') + (article.domain || '');
+  $('modal-body-text').innerHTML = '<div class="modal-body-empty">본문 불러오는 중...</div>';
+  $('modal-origin-link').href = article.origin || article.url || '#';
+  updateModalBasketBtn();
+  $('article-modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  try {
+    var res = await fetchWithTimeout(WORKER_API_BASE + '/fetch-article', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url: article.url, origin: article.origin, title: article.title, desc: article.desc })
+    }, 20000);
+    var data = await res.json();
+    if (data.ok && data.body) {
+      var cleaned = data.body
+        .replace(/var\s+\w+\s*=\s*[^;]{0,80};/g, ' ')
+        .replace(/ⓒ\s*\S+/g, '')
+        .replace(/\[사진[^\]]*\]/g, '')
+        .replace(/\[이미지[^\]]*\]/g, '')
+        .replace(/사진\s*=\s*[^\s]+/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      $('modal-body-text').textContent = cleaned;
+    } else {
+      $('modal-body-text').innerHTML = '<div class="modal-body-empty">본문을 불러오지 못했어요.<br>기사 원문을 직접 확인하거나 본문 직접 붙여넣기를 사용해 주세요.</div>';
+    }
+  } catch(e) {
+    $('modal-body-text').innerHTML = '<div class="modal-body-empty">본문 로딩 실패: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+function closeArticleModal(e) {
+  if (e && e.target !== $('article-modal')) return;
+  $('article-modal').classList.remove('show');
+  document.body.style.overflow = '';
+}
+function generateFromModal() {
+  closeArticleModal();
+  generateFromArticle(modalArticleIndex);
+}
+
+async function generateFromArticle(index) {
+  var article = currentArticles[index];
+  if (!article) { showToast('기사 정보를 찾지 못했어요.'); return; }
+  var token = ++generationSeq;
+  selectedArticleIndex = index;
+  renderArticles();
+  $('cards-panel').style.display = 'block';
+  setStatus('warn', '선택 기사 고정: ' + clip(article.title, 54) + ' · 본문 수집 및 AI 요약 중...');
+  showLoading('본문 수집 + AI 요약 중...');
+  try {
+    var data = await workerApiJson('/generate-cardnews', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ article: article, query: lastQuery, manualText: getManualTextForArticle() }),
+      timeout: 60000
+    });
+    if (token !== generationSeq) return;
+    cards = normalizeArticleCards(data.cards || [], article);
+    lastSummary = data.summary || makeCaptionFromCards(cards, magSettings.magHashtags || '#카드뉴스 #트렌드 #매거진');
+    cardImages = {}; cardStyles = {}; cardAlign = {};
+    renderCards();
+    var info = data.sourceInfo || {};
+    setStatus(info.usedFullBody || info.usedManual ? 'ok' : 'warn', clean(info.status || 'AI 카드뉴스 생성 완료'));
+    setTimeout(function() { $('cards-panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+    showToast('AI 카드뉴스를 생성했어요.');
+  } catch(e) {
+    setStatus('warn', e.message || '카드뉴스 생성 실패');
+    showToast(e.message || '카드뉴스 생성 실패');
+  } finally {
+    hideLoading();
+  }
+}
+
+function normalizeArticleCards(rawCards, article) {
+  var arr = Array.isArray(rawCards) ? rawCards : [];
+  var findRole = function(role) { return arr.find(function(c) { return String(c && c.role || '').toUpperCase() === role; }) || null; };
+  var hook = arr.find(function(c) { return c && c.type === 'hook'; }) || arr[0] || {};
+  var cta = arr.find(function(c) { return c && c.type === 'cta'; }) || arr[4] || {};
+  var roles = ['NOW TRENDING', 'CONTEXT', 'THE TAKEAWAY', "WHAT'S NEXT", 'WHY IT MATTERS'];
+  var magName = magSettings.magName || 'MAGAZINIE';
+  return [
+    { label: 'COVER', role: 'COVER', title: keepLine(hook.title || article.title || ''), body: '', subtitle: clean(hook.subtitle || article.desc || ''), type: 'hook', magName: magName },
+    roles.map(function(role, idx) {
+      var c = findRole(role) || arr[idx + 1] || {};
+      return { label: 'CARD ' + String(idx + 1).padStart(2, '0'), role: role, title: clean(c.title || role), body: keepLine(c.body || ''), type: 'body' };
+    }),
+    { label: 'ENDING', role: 'ENDING', title: clean(cta.title || magSettings.magMent || '한 장씩 넘기면 정리 끝'), body: keepLine(cta.body || magSettings.magCtaBody || '복잡한 이슈, 핵심만 쉽게\n저장해두고 다시 확인해요.'), type: 'cta' }
+  ].flat().map(sanitizeCard);
+}
+
+/* ===== 레터 만들기 ===== */
+function fillLetterSample() {
+  $('letter-topic').value = '주말을 잘 보내는 방법';
+  $('letter-reference').value = '이번 주말, 모르고 지나가기엔 너무 아까운 시간을 잘 보내는 방법. 정보성은 있지만 딱딱하지 않고, 친구가 추천해주는 듯한 톤.';
+  $('letter-tone').value = '다정한 감성';
+  $('letter-count').value = '7';
+}
+
+async function generateFromLetter() {
+  var topic = $('letter-topic').value.trim();
+  var referenceText = $('letter-reference').value.trim();
+  var tone = $('letter-tone').value;
+  var cardCount = Number($('letter-count').value || 7);
+  if (!topic) { showToast('주제를 입력해 주세요.'); return; }
+
+  var token = ++generationSeq;
+  $('cards-panel').style.display = 'block';
+  setStatus('warn', 'AI로 레터 문구 생성 중: ' + clip(topic, 54));
+  showLoading('AI로 레터 카드뉴스를 쓰고 있어요...');
+
+  try {
+    var result = await callWorkerForLetter(topic, referenceText, tone, cardCount);
+    var raw = result.cards;
+    var usedModel = result.usedModel || '';
+
+    if (token !== generationSeq) return;
+    if (!raw.length) throw new Error('레터 카드 배열이 비어있어요.');
+    if (isNewsStyleCards(raw)) {
+      throw new Error('응답이 기사형 문구로 나왔어요. 참고 문장을 줄이고 다시 생성해 주세요.');
+    }
+
+    cards = normalizeLetterCards(raw).map(sanitizeCard);
+    lastSummary = makeLetterSummary(topic, cards);
+    cardImages = {}; cardStyles = {}; cardAlign = {};
+    renderCards();
+
+    var modelLabel = usedModel ? ' (' + usedModel + ')' : '';
+    setStatus('ok', '레터 카드뉴스 문구를 생성했어요.' + modelLabel);
+    setTimeout(function() { $('cards-panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+    showToast('레터 생성 완료' + modelLabel);
+  } catch(e) {
+    setStatus('warn', e.message || '레터 생성 실패');
+    showToast(e.message || '레터 생성 실패');
+  } finally {
+    hideLoading();
+  }
+}
+
+function normalizeLetterCards(rawCards) {
+  var arr = Array.isArray(rawCards) ? rawCards : [];
+  var magName = magSettings.magName || 'POPO LETTER';
+  return arr.map(function(card, index) {
+    if (card.type === 'cover' || index === 0) {
+      return { label: 'COVER', role: 'COVER', title: keepLine(card.title || ''), subtitle: clean(card.subtitle || ''), body: '', type: 'hook', magName: magName };
+    }
+    if (card.type === 'ending' || index === arr.length - 1) {
+      return { label: 'ENDING', role: 'ENDING', title: clean(card.title || ''), body: keepLine(card.body || ''), type: 'cta' };
+    }
+    return { label: 'CARD ' + String(index).padStart(2, '0'), role: 'LETTER', num: card.num ? String(card.num).padStart(2, '0') : String(index).padStart(2, '0'), title: clean(card.title || ''), body: keepLine(card.body || ''), type: 'body' };
+  });
+}
+
+function sanitizeCard(card) {
+  card.title = sanitizeLetterText(card.title);
+  card.subtitle = sanitizeLetterText(card.subtitle);
+  card.body = sanitizeLetterText(card.body);
+  return card;
+}
+function sanitizeLetterText(text) {
+  var s = String(text || '');
+  FORBIDDEN_LETTER_WORDS.forEach(function(w) { s = s.split(w).join(''); });
+  var noisePatterns = [
+    /본문\s*수집\s*불가[^.!?\n。]{0,160}/g,
+    /원문\s*확인\s*필요[^.!?\n。]{0,160}/g,
+    /검색\s*결과\s*설명[^.!?\n。]{0,180}/g,
+    /카드뉴스용\s*요약을\s*안정적으로\s*만들기\s*어렵습니다/g,
+    /스크롤[^.!?\n。]{0,80}/g,
+    /상태바[^.!?\n。]{0,80}/g,
+    /화면\s*이동[^.!?\n。]{0,80}/g,
+    /페이지\s*이동[^.!?\n。]{0,80}/g,
+    /버튼[^.!?\n。]{0,60}/g,
+    /관련기사[^.!?\n。]{0,120}/g,
+    /추천기사[^.!?\n。]{0,120}/g,
+    /많이\s*본\s*뉴스[^.!?\n。]{0,120}/g,
+    /랭킹뉴스[^.!?\n。]{0,120}/g,
+    /공유하기[^.!?\n。]{0,80}/g,
+    /댓글\s*\d*[^.!?\n。]{0,80}/g,
+    /광고[^.!?\n。]{0,80}/g,
+    /구독[^.!?\n。]{0,80}/g,
+    /무단전재[^.!?\n。]{0,160}/g,
+    /재배포\s*금지[^.!?\n。]{0,160}/g,
+    /저작권자[^.!?\n。]{0,160}/g,
+    /Copyright[^.!?\n。]{0,200}/gi,
+    /[가-힣]{2,5}\s*기자\s*[\w.%-]+@[\w.-]+/g,
+    /[가-힣]{2,5}\s*기자/g,
+    /입력\s*\d{4}[.\/-]\d{1,2}[.\/-]\d{1,2}[^.!?\n。]{0,120}/g,
+    /수정\s*\d{4}[.\/-]\d{1,2}[.\/-]\d{1,2}[^.!?\n。]{0,120}/g
+  ];
+  noisePatterns.forEach(function(pattern) { s = s.replace(pattern, ' '); });
+  s = s.replace(/\s+것입니다\.?/g, ' 좋아요.');
+  s = s.replace(/\s+수 있습니다\.?/g, ' 수 있어요.');
+  s = s.replace(/\s+합니다\.?/g, '해요.');
+  s = s.replace(/\s+하세요\.?/g, '해보는 건 어때요?');
+  return s.replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/\s{2,}/g, ' ').trim();
+}
+
+/* ===== 카드 렌더링 ===== */
+function setStatus(type, msg) {
+  var el = $('source-status');
+  el.className = 'source-status ' + (type === 'ok' ? 'ok' : 'warn');
+  el.textContent = msg;
+}
+function styleOf(i) {
+  if (!cardStyles[i]) cardStyles[i] = {
+    bg: i === 0 ? '#101010' : '#080808',
+    title: '#ffffff',
+    body: '#ffffff',
+    accent: magSettings.magAccent || '#ffffff',
+    size: i === 0 ? 26 : 22,
+    titleSize: i === 0 ? 26 : 22,
+    bodySize: i === 0 ? 18 : 14,
+    overlay: i === 0 ? 68 : 66,
+    titleFont: 'Pretendard Variable',
+    bodyFont: 'Pretendard Variable'
+  };
+  return cardStyles[i];
+}
+function alignOf(i) { if (!cardAlign[i]) cardAlign[i] = 'left'; return cardAlign[i]; }
+function setAlign(i, align) { cardAlign[i] = align; rerenderCard(i); }
+function setStyle(i, k, v) { styleOf(i)[k] = k === 'size' || k === 'overlay' || k === 'titleSize' || k === 'bodySize' ? Number(v) : v; rerenderCard(i); }
+function rerenderCard(i) { var el = $('card-' + i); if (el) el.innerHTML = cardHtml(cards[i], i); renderCaption(); }
+
+function renderCards() {
+  var row = $('card-row'), edit = $('edit-row');
+  row.innerHTML = ''; edit.innerHTML = '';
+  cards.forEach(function(c, i) {
+    row.appendChild(renderCardCol(c, i));
+    edit.appendChild(renderEdit(c, i));
+  });
+  renderCaption();
+}
+function renderCardCol(c, i) {
+  var col = document.createElement('div');
+  col.className = 'card-col';
+  col.innerHTML = '<div class="card-label">' + escapeHtml(c.label) + '</div>'
+    + '<div id="card-' + i + '" class="card-wrap">' + cardHtml(c, i) + '</div>'
+    + '<div class="align-row"><button type="button" onclick="setAlign(' + i + ',\'left\')">왼쪽</button>'
+    + '<button type="button" onclick="setAlign(' + i + ',\'center\')">중앙</button>'
+    + '<button type="button" onclick="setAlign(' + i + ',\'right\')">오른쪽</button></div>'
+    + '<input type="file" id="img-' + i + '" accept="image/*" style="display:none" onchange="setImage(' + i + ',this)">'
+    + '<button type="button" class="img-btn" onclick="document.getElementById(\'img-' + i + '\').click()">이미지 변경</button>';
+  return col;
+}
+function defaultBg(i) {
+  var gradients = [
+    'linear-gradient(135deg,#2b2320,#090909 70%)',
+    'linear-gradient(135deg,#20242a,#060606 75%)',
+    'linear-gradient(135deg,#2a241d,#080808 75%)',
+    'linear-gradient(135deg,#1d2628,#050505 75%)',
+    'linear-gradient(135deg,#261f2a,#070707 75%)',
+    'linear-gradient(135deg,#2a2022,#060606 75%)',
+    'linear-gradient(135deg,#202020,#050505 75%)'
+  ];
+  return '<div style="position:absolute;inset:0;background:' + gradients[i % gradients.length] + '"></div>'
+    + '<div style="position:absolute;inset:0;background:radial-gradient(circle at 20% 15%,rgba(255,255,255,.16),transparent 32%),radial-gradient(circle at 80% 10%,rgba(255,158,199,.12),transparent 30%)"></div>';
+}
+function imageLayer(i, st) {
+  var img = cardImages[i];
+  if (!img) return defaultBg(i);
+  return '<img src="' + img + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">'
+    + '<div style="position:absolute;inset:0;background:rgba(0,0,0,' + (st.overlay / 100) + ')"></div>';
+}
+function renderHookTitle(title, main, accent) {
+  var parts = String(title || '').split('\n');
+  return parts.map(function(p, idx) {
+    return '<span style="color:' + (idx === 0 ? main : accent) + '">' + escapeHtml(p) + '</span>';
+  }).join('<br>');
+}
+function cardHtml(c, i) {
+  var st = styleOf(i), align = alignOf(i);
+  var textAlign = align;
+  var magName = c.magName || magSettings.magName || 'POPO LETTER';
+  var magHandle = magSettings.magHandle || 'popo레터';
+  var counter = (i + 1) + '/' + cards.length;
+
+  var tff = '"' + (st.titleFont || 'Pretendard Variable') + '", sans-serif';
+  var bff = '"' + (st.bodyFont || 'Pretendard Variable') + '", sans-serif';
+
+  if (c.type === 'hook') {
+    return '<div class="card-inner" style="background:' + st.bg + ';">'
+      + imageLayer(i, st)
+      + '<div style="position:absolute;left:18px;right:18px;bottom:28px;text-align:' + textAlign + ';z-index:2">'
+      + '<div style="font-family:' + tff + ';font-size:' + (st.titleSize||st.size) + 'px;line-height:1.22;font-weight:900;letter-spacing:-.04em;word-break:keep-all;text-shadow:0 2px 16px rgba(0,0,0,.35)">' + renderHookTitle(c.title, st.title, st.accent) + '</div>'
+      + '<div style="margin-top:18px;font-size:9px;font-weight:900;letter-spacing:.16em;color:rgba(255,255,255,.55);text-transform:uppercase">' + escapeHtml(magName) + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  if (c.type === 'cta') {
+    return '<div class="card-inner" style="background:' + st.bg + ';">'
+      + imageLayer(i, st)
+      + '<div style="position:absolute;inset:0;padding:50px 20px 38px;display:flex;flex-direction:column;justify-content:center;text-align:' + textAlign + ';z-index:2;color:#fff">'
+      + '<div style="font-family:' + tff + ';font-size:' + (st.titleSize||st.size) + 'px;font-weight:900;line-height:1.3;letter-spacing:-.04em;color:' + st.title + ';white-space:pre-line;word-break:keep-all;text-shadow:0 2px 16px rgba(0,0,0,.35)">' + escapeHtml(c.title || '') + '</div>'
+      + '<div style="font-family:' + bff + ';font-size:' + (st.bodySize||Math.max(6,st.size-5)) + 'px;color:' + st.body + ';line-height:1.7;white-space:pre-line;word-break:keep-all;margin-top:18px;font-weight:600;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.body || '') + '</div>'
+      + '<div style="margin-top:28px;font-size:10px;font-weight:900;color:rgba(255,255,255,.65)">@' + escapeHtml(magHandle.replace('@','')) + '</div>'
+      + '</div>'
+      + '<div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;z-index:3;">'
+      + '<span style="font-size:7px;font-weight:900;letter-spacing:.16em;color:rgba(255,255,255,.45);text-transform:uppercase">' + escapeHtml(magName) + '</span>'
+      + '</div>'
+      + '</div>';
+  }
+
+  var numLabel = c.num || '';
+  return '<div class="card-inner" style="background:' + st.bg + ';">'
+    + imageLayer(i, st)
+    + '<div style="position:absolute;left:18px;right:18px;bottom:28px;text-align:' + textAlign + ';z-index:2">'
+    + '<div style="font-family:' + tff + ';font-size:' + (st.titleSize||st.size) + 'px;line-height:1.25;font-weight:900;color:' + st.title + ';word-break:keep-all;text-shadow:0 2px 16px rgba(0,0,0,.35);letter-spacing:-.03em;margin-bottom:14px">' + escapeHtml(c.title || '') + '</div>'
+    + (numLabel ? '<div style="font-size:10px;font-weight:900;color:' + st.accent + ';letter-spacing:.04em;margin-bottom:7px">' + escapeHtml(numLabel) + '</div>' : '')
+    + '<div style="font-family:' + bff + ';font-size:' + (st.bodySize||Math.max(6,st.size-4)) + 'px;line-height:1.72;font-weight:600;color:' + st.body + ';white-space:pre-line;word-break:keep-all;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.2)">' + escapeHtml(c.body || '') + '</div>'
+    + '</div>'
+    + '<div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;z-index:3;">'
+    + '<span style="font-size:7px;font-weight:900;letter-spacing:.16em;color:rgba(255,255,255,.45);text-transform:uppercase">' + escapeHtml(magName) + '</span>'
+    + '</div>'
+    + '</div>';
+}
+function renderEdit(c, i) {
+  var st = styleOf(i);
+  var div = document.createElement('div');
+  div.className = 'edit-panel';
+  div.innerHTML = '<div class="edit-panel-head">' + escapeHtml(c.label) + '</div>'
+    + '<div class="edit-label">제목 수정</div>'
+    + '<textarea id="title-' + i + '" class="title-input" oninput="applyText(' + i + ', true)">' + escapeHtml(c.title || '') + '</textarea>'
+    + (c.type !== 'hook' ? '<div class="edit-label">본문 수정</div><textarea id="body-' + i + '" class="body-input" oninput="applyText(' + i + ', true)">' + escapeHtml(c.body || '') + '</textarea>' : '')
+    + '<div class="color-grid">'
+    + '<label class="color-item">배경 <input type="color" value="' + st.bg + '" onchange="setStyle(' + i + ',\'bg\',this.value)"></label>'
+    + '<label class="color-item">제목 <input type="color" value="' + st.title + '" onchange="setStyle(' + i + ',\'title\',this.value)"></label>'
+    + '<label class="color-item">강조 <input type="color" value="' + st.accent + '" onchange="setStyle(' + i + ',\'accent\',this.value)"></label>'
+    + '<label class="color-item">본문 <input type="color" value="' + st.body + '" onchange="setStyle(' + i + ',\'body\',this.value)"></label>'
+    + '</div>'
+    + '<div class="size-row">제목 크기 <input type="range" min="6" max="50" value="' + (st.titleSize||st.size) + '" oninput="setStyle(' + i + ',\'titleSize\',this.value);this.nextElementSibling.textContent=this.value"> <span style="min-width:22px;text-align:right;font-weight:900;color:#141019;">' + (st.titleSize||st.size) + '</span></div>'
+    + '<div class="size-row">본문 크기 <input type="range" min="6" max="50" value="' + (st.bodySize||14) + '" oninput="setStyle(' + i + ',\'bodySize\',this.value);this.nextElementSibling.textContent=this.value"> <span style="min-width:22px;text-align:right;font-weight:900;color:#141019;">' + (st.bodySize||14) + '</span></div>'
+    + '<div class="size-row">어둡게 <input type="range" min="15" max="85" value="' + st.overlay + '" oninput="setStyle(' + i + ',\'overlay\',this.value)"></div>'
+    + '<div class="edit-label">제목 폰트</div>'
+    + '<select onchange="setStyle(' + i + ',\'titleFont\',this.value)" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:7px 10px;font-size:12px;outline:none;background:#f8f8f8;font-weight:700;margin-bottom:6px;">'
+    + ['Pretendard Variable','MemomentKkukkukk','Noto Serif KR','Black Han Sans','Gowun Dodum'].map(function(f) {
+        return '<option value="' + f + '"' + ((st.titleFont||'Pretendard Variable') === f ? ' selected' : '') + '>' + f + '</option>';
+      }).join('')
+    + '</select>'
+    + '<div class="edit-label">본문 폰트</div>'
+    + '<select onchange="setStyle(' + i + ',\'bodyFont\',this.value)" style="width:100%;border:1px solid var(--rule);border-radius:8px;padding:7px 10px;font-size:12px;outline:none;background:#f8f8f8;font-weight:700;">'
+    + ['Pretendard Variable','MemomentKkukkukk','Noto Serif KR','Black Han Sans','Gowun Dodum'].map(function(f) {
+        return '<option value="' + f + '"' + ((st.bodyFont||'Pretendard Variable') === f ? ' selected' : '') + '>' + f + '</option>';
+      }).join('')
+    + '</select>'
+    + '<button type="button" class="btn apply" onclick="applyText(' + i + ')">텍스트 적용</button>';
+  return div;
+}
+function applyText(i, silent) {
+  if ($('title-' + i)) cards[i].title = $('title-' + i).value;
+  if ($('subtitle-' + i)) cards[i].subtitle = $('subtitle-' + i).value;
+  if ($('body-' + i)) cards[i].body = $('body-' + i).value;
+  rerenderCard(i);
+  if (!silent) showToast('텍스트를 적용했어요.');
+}
+function setImage(i, input) {
+  var f = input.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) { cardImages[i] = e.target.result; rerenderCard(i); };
+  r.readAsDataURL(f);
+}
+
+/* ===== 캡션 ===== */
+function makeCaptionFromCards(cardList, defaultTags) {
+  var lines = [];
+  if (cardList[0]) lines.push(clean(cardList[0].title || '').replace(/\n/g, ' '));
+  cardList.slice(1, 4).forEach(function(c) {
+    var x = clean((c.title ? c.title + ' — ' : '') + (c.body || ''));
+    if (x) lines.push(x);
+  });
+  return { caption: lines.join('\n'), hashtags: String(defaultTags || '#카드뉴스 #매거진').split(' ') };
+}
+function makeLetterSummary(topic, cardList) {
+  var caption = '이번 주, 그냥 흘려보내기엔 아까운 순간들을 위해 💘\n\n' + clean(topic) + '에 대해 가볍게 넘겨볼 수 있게 정리했어요.';
+  return { caption: caption, hashtags: ['#카드뉴스', '#레터', '#인스타그램', '#주말루틴', '#일상기록'] };
+}
+function renderCaption() {
+  if (!cards.length) { $('caption-box').innerHTML = ''; $('hashtag-box').textContent = ''; return; }
+  var summary = lastSummary && (lastSummary.caption || lastSummary.hashtags) ? lastSummary : makeCaptionFromCards(cards, '#카드뉴스 #레터');
+  var lines = String(summary.caption || '').split('\n').filter(Boolean);
+  if (!lines.length) lines = [clean(cards[0] && cards[0].title || '')];
+  $('caption-box').innerHTML = lines.map(function(x) { return '<div class="caption-line">' + escapeHtml(x) + '</div>'; }).join('');
+  $('hashtag-box').textContent = Array.isArray(summary.hashtags) && summary.hashtags.length ? summary.hashtags.map(clean).join(' ') : '#카드뉴스 #레터 #인스타그램';
+}
+function copyCaption() {
+  var text = Array.from(document.querySelectorAll('.caption-line')).map(function(x) { return x.textContent; }).join('\n') + '\n\n' + $('hashtag-box').textContent;
+  navigator.clipboard.writeText(text).then(function() { showToast('캡션을 복사했어요.'); });
+}
+
+/* ===== 다운로드 ===== */
+async function captureCardOffscreen(i) {
+  var modal = $('preview-modal');
+  var wasHidden = modal.style.display === 'none' || !modal.style.display;
+  if (wasHidden) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    await new Promise(function(r) { setTimeout(r, 80); });
+  }
+  renderPreviewCard(i);
+  await new Promise(function(r) { setTimeout(r, 120); });
+  var prevBtn = $('preview-prev-btn');
+  var nextBtn = $('preview-next-btn');
+  var dots = $('preview-dots');
+  if (prevBtn) prevBtn.style.display = 'none';
+  if (nextBtn) nextBtn.style.display = 'none';
+  if (dots) dots.style.display = 'none';
+  var imgBox = $('preview-card-img');
+  var wrapper = imgBox.firstElementChild;
+  var target = wrapper || imgBox;
+  var tw = target.offsetWidth;
+  var th = target.offsetHeight;
+  var canvas = await html2canvas(target, {
+    scale: 3,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: null,
+    width: tw,
+    height: th
+  });
+  if (prevBtn) prevBtn.style.display = '';
+  if (nextBtn) nextBtn.style.display = '';
+  if (dots) dots.style.display = '';
+  if (wasHidden) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  return canvas;
+}
+
+async function downloadAll() {
+  if (!cards.length) { showToast('먼저 카드를 생성해 주세요.'); return; }
+  if (typeof JSZip === 'undefined' || typeof html2canvas === 'undefined') { showToast('다운로드 라이브러리를 불러오지 못했어요.'); return; }
+  showLoading('이미지 생성 중...');
+  try {
+    var zip = new JSZip();
+    for (var i = 0; i < cards.length; i++) {
+      var canvas = await captureCardOffscreen(i);
+      var blob = await new Promise(function(resolve) { canvas.toBlob(resolve, 'image/png'); });
+      zip.file('card_' + String(i + 1).padStart(2, '0') + '_' + cards[i].label + '.png', blob);
+    }
+    zip.file('caption.txt', Array.from(document.querySelectorAll('.caption-line')).map(function(x) { return x.textContent; }).join('\n') + '\n\n' + $('hashtag-box').textContent);
+    var data = await zip.generateAsync({ type: 'blob' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(data);
+    a.download = 'magazinie-letter-cardnews.zip';
+    a.click();
+    showToast('ZIP 다운로드 완료');
+  } catch(e) {
+    showToast('다운로드 실패: ' + (e.message || ''));
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ===== 인스타 미리보기 ===== */
+function openPreview() {
+  if (!cards.length) { showToast('먼저 카드를 생성해 주세요.'); return; }
+  previewIndex = 0;
+  var modal = $('preview-modal');
+  $('preview-card-img').innerHTML = '';
+  $('preview-dots').innerHTML = '';
+  var handle = (magSettings.magHandle || 'popo레터').replace('@','');
+  $('preview-profile-name').textContent = handle;
+  $('preview-profile-initial').textContent = handle.charAt(0).toUpperCase();
+  for (var di = 0; di < cards.length; di++) {
+    var dot = document.createElement('div');
+    dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.4);transition:.2s;flex-shrink:0;';
+    $('preview-dots').appendChild(dot);
+  }
+  $('preview-caption').textContent = lastSummary.caption || '';
+  $('preview-hashtags').textContent = Array.isArray(lastSummary.hashtags) ? lastSummary.hashtags.join(' ') : '';
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  $('preview-prev-btn').onclick = function() { if (previewIndex > 0) renderPreviewCard(previewIndex - 1); };
+  $('preview-next-btn').onclick = function() { if (previewIndex < cards.length - 1) renderPreviewCard(previewIndex + 1); };
+  renderPreviewCard(0);
+}
+function renderPreviewCard(idx) {
+  if (idx < 0 || idx >= cards.length) return;
+  previewIndex = idx;
+  var imgBox = $('preview-card-img');
+  imgBox.innerHTML = '';
+  var boxW = imgBox.offsetWidth || 360;
+  var BASE_W = 240;
+  var BASE_H = 320;
+  var scale = boxW / BASE_W;
+  var html = cardHtml(cards[idx], idx);
+  var inner = document.createElement('div');
+  inner.style.cssText = 'width:' + BASE_W + 'px;height:' + BASE_H + 'px;transform-origin:top left;transform:scale(' + scale + ');flex-shrink:0;';
+  inner.innerHTML = html;
+  var cardEl = inner.firstChild;
+  if (cardEl) {
+    cardEl.style.borderRadius = '0';
+    cardEl.style.width = BASE_W + 'px';
+    cardEl.style.height = BASE_H + 'px';
+    var imgEl = cardEl.querySelector('img');
+    if (imgEl) { imgEl.style.width = '100%'; imgEl.style.height = '100%'; imgEl.style.objectFit = 'cover'; }
+  }
+  var wrapper = document.createElement('div');
+  wrapper.style.cssText = 'width:' + boxW + 'px;height:' + (BASE_H * scale) + 'px;overflow:hidden;flex-shrink:0;';
+  wrapper.appendChild(inner);
+  imgBox.appendChild(wrapper);
+  $('preview-counter').style.display = 'none';
+  var dotEls = $('preview-dots').children;
+  for (var i = 0; i < dotEls.length; i++) dotEls[i].style.background = i === idx ? '#fff' : 'rgba(255,255,255,0.4)';
+}
+function closePreviewModal() { $('preview-modal').style.display = 'none'; document.body.style.overflow = ''; }
+
+/* ===== 매거진 설정 ===== */
+function openMagModal() {
+  $('mag-name').value = magSettings.magName || '';
+  $('mag-handle').value = magSettings.magHandle || '';
+  $('mag-ment').value = magSettings.magMent || '';
+  $('mag-cta-body').value = magSettings.magCtaBody || '';
+  $('mag-hashtags').value = magSettings.magHashtags || '';
+  $('mag-accent').value = magSettings.magAccent || '#ff9ec7';
+  $('mag-accent-val').textContent = magSettings.magAccent || '#ff9ec7';
+  var prev = $('mag-logo-preview');
+  if (magSettings.magLogo) {
+    prev.innerHTML = '<img src="' + magSettings.magLogo + '" style="width:100%;height:100%;object-fit:cover;">';
+  } else {
+    prev.innerHTML = '📰';
+  }
+  $('mag-accent').oninput = function() { $('mag-accent-val').textContent = this.value; };
+  $('mag-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeMagModal() { $('mag-modal').style.display = 'none'; document.body.style.overflow = ''; }
+function handleMagLogo(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var src = e.target.result;
+    $('mag-logo-preview').innerHTML = '<img src="' + src + '" style="width:100%;height:100%;object-fit:cover;">';
+    magSettings.magLogo = src;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+function clearMagLogo() { magSettings.magLogo = ''; $('mag-logo-preview').innerHTML = '📰'; }
+function applyMagSettings() {
+  magSettings.magName = $('mag-name').value.trim() || magSettings.magName;
+  magSettings.magHandle = $('mag-handle').value.trim() || magSettings.magHandle;
+  magSettings.magMent = $('mag-ment').value.trim() || magSettings.magMent;
+  magSettings.magCtaBody = $('mag-cta-body').value || magSettings.magCtaBody;
+  magSettings.magHashtags = $('mag-hashtags').value.trim() || magSettings.magHashtags;
+  magSettings.magAccent = $('mag-accent').value || magSettings.magAccent;
+  saveMagSettings();
+  var handle = magSettings.magHandle.replace('@','');
+  if ($('preview-profile-name')) $('preview-profile-name').textContent = handle;
+  if ($('preview-profile-initial')) $('preview-profile-initial').textContent = handle.charAt(0).toUpperCase();
+  closeMagModal();
+  showToast('매거진 설정이 저장됐어요.');
+  if (cards.length) {
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].type === 'cta') {
+        cards[i].title = magSettings.magMent || cards[i].title;
+        cards[i].body = magSettings.magCtaBody || cards[i].body;
+        rerenderCard(i);
+      }
+    }
+  }
+}
+
+function init() {
+  loadMagSettings();
+  renderSearchChips();
+  renderBasket();
+  checkWorkerHealth(false);
+  $('search-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addTag(); } });
+}
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
